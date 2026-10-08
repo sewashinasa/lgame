@@ -42,10 +42,10 @@ rf.y = 2
 rf.w = 3
 rf.h = 4
 
-assert(rf.x == 1, "cf.x == 1 assert failure")
-assert(rf.y == 2, "cf.y == 2 assert failure")
-assert(rf.w == 3, "cf.w == 3 assert failure")
-assert(rf.h == 4, "cf.h == 4 assert failure")
+assert(rf.x == 1, "rf.x == 1 assert failure")
+assert(rf.y == 2, "rf.y == 2 assert failure")
+assert(rf.w == 3, "rf.w == 3 assert failure")
+assert(rf.h == 4, "rf.h == 4 assert failure")
 print("-- OK")
 
 
