@@ -15,7 +15,7 @@ static int Color__tostring(lua_State * L);
 static int Color__index(lua_State * L);
 static int Color__newindex(lua_State * L);
 
-const struct luaL_Reg lg_Color_module[] = {
+const struct luaL_Reg lg_color_module[] = {
   {"Color", Color_new},
   {NULL, NULL}
 };

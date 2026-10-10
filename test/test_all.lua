@@ -2,6 +2,7 @@
 local lf = {
 	"./test_color.lua",
 	"./test_rect.lua",
+	"./test_surface.lua",
 }
 
 for i=1, #lf do

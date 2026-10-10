@@ -11,7 +11,7 @@ static int Rect__tostring(lua_State* L);
 static int Rect__index(lua_State* L);
 static int Rect__newindex(lua_State* L);
 
-const struct luaL_Reg lg_Rect_module[] = {
+const struct luaL_Reg lg_rect_module[] = {
   {"Rect", Rect_new},
   {NULL, NULL}
 };
@@ -48,6 +48,11 @@ void lg_pushpoint(lua_State* L, lPoint p) {
   lua_rawseti(L, -2, 2);
 }
 
+void lg_pushpoint2int(lua_State* L, int x, int y) {
+  lPoint p; p.x = x; p.y = y;
+  lg_pushpoint(L, p);
+}
+
 lPoint lg_checkpoint(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
   lPoint p;
@@ -59,6 +64,12 @@ lPoint lg_checkpoint(lua_State* L, int idx) {
   p.y = (int)luaL_checkinteger(L, -1);
   lua_pop(L, 1);
   return p;
+}
+
+void lg_checkpoint2int(lua_State* L, int idx, int* x, int* y) {
+  lPoint p = lg_checkpoint(L, idx);
+  if (x) *x = p.x;
+  if (y) *y = p.y;
 }
 
 lRect lg_checkrecttable(lua_State* L, int idx) {

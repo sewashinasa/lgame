@@ -14,7 +14,7 @@
 typedef SDL_Color lColor;
 typedef SDL_FColor lFColor;
 
-extern const struct luaL_Reg lg_Color_module[];
+extern const struct luaL_Reg lg_color_module[];
 extern const struct luaL_Reg lg_Color_methods[];
 extern const struct luaL_Reg lg_Color_metamethods[];
 

@@ -13,14 +13,16 @@
 typedef SDL_Rect lRect;
 typedef SDL_Point lPoint;
 
-extern const struct luaL_Reg lg_Rect_module[];
+extern const struct luaL_Reg lg_rect_module[];
 extern const struct luaL_Reg lg_Rect_methods[];
 extern const struct luaL_Reg lg_Rect_metamethods[];
 
 lRect* lg_pushrect(lua_State* L);
 lRect* lg_checkrect(lua_State* L, int idx);
 void lg_pushpoint(lua_State* L, lPoint p);
+void lg_pushpoint2int(lua_State* L, int x, int y);
 lPoint lg_checkpoint(lua_State* L, int idx);
+void lg_checkpoint2int(lua_State* L, int idx, int* x, int* y);
 lRect lg_checkrecttable(lua_State* L, int idx);
 lRect lg_checkrectarg(lua_State* L, int idx);
 lRect lg_checkrectfromargs(lua_State* L, int offset);
