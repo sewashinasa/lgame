@@ -13,6 +13,8 @@ local s;
 local bypp, bipp;
 local possible_depth, possible_masks;
 local m, rm, gm, bm, am;
+local cliprect;
+local src, src200x200, dst;
 
 s = Surface({ 100, 100 })
 assert(s:get_width() == 100, "s:get_width() assert failure")
@@ -89,6 +91,86 @@ for i=1,#possible_masks do
 end
 print("-- OK")
 
+
+
+dst = Surface({ 100, 100 })
+src = Surface({ 50, 50 })
+src200x200 = Surface({ 200, 200 })
+
+cliprect = dst:blit(src, { 20, 20 })
+assert(cliprect.x == 20, "cliprect.x == 20 assert failure")
+assert(cliprect.y == 20, "cliprect.y == 20 assert failure")
+assert(cliprect.w == 50, "cliprect.w == 50 assert failure")
+assert(cliprect.h == 50, "cliprect.h == 50 assert failure")
+
+cliprect = dst:blit(src, { -10, -10 })
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 40, "cliprect.w == 40 assert failure")
+assert(cliprect.h == 40, "cliprect.h == 40 assert failure")
+
+cliprect = dst:blit(src, { 80, 80 })
+assert(cliprect.x == 80, "cliprect.x == 80 assert failure")
+assert(cliprect.y == 80, "cliprect.y == 80 assert failure")
+assert(cliprect.w == 20, "cliprect.w == 20 assert failure")
+assert(cliprect.h == 20, "cliprect.h == 20 assert failure")
+
+cliprect = dst:blit(src, { 150, 0 })
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 0, "cliprect.w == 0 assert failure")
+assert(cliprect.h == 0, "cliprect.h == 0 assert failure")
+
+cliprect = dst:blit(src, { 100, 0 })
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 0, "cliprect.w == 0 assert failure")
+assert(cliprect.h == 0, "cliprect.h == 0 assert failure")
+
+cliprect = dst:blit(src200x200, { -50, -50 })
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 100, "cliprect.w == 100 assert failure")
+assert(cliprect.h == 100, "cliprect.h == 100 assert failure")
+print("-- OK")
+
+
+cliprect = dst:fill({ 0,0,0,0 }, {20,20,50,50})
+assert(cliprect.x == 20, "cliprect.x == 20 assert failure")
+assert(cliprect.y == 20, "cliprect.y == 20 assert failure")
+assert(cliprect.w == 50, "cliprect.w == 50 assert failure")
+assert(cliprect.h == 50, "cliprect.h == 50 assert failure")
+
+cliprect = dst:fill({ 0,0,0,0 }, {-10,-10,50,50})
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 40, "cliprect.w == 40 assert failure")
+assert(cliprect.h == 40, "cliprect.h == 40 assert failure")
+
+cliprect = dst:fill({ 0,0,0,0 }, {80,80,50,50})
+assert(cliprect.x == 80, "cliprect.x == 80 assert failure")
+assert(cliprect.y == 80, "cliprect.y == 80 assert failure")
+assert(cliprect.w == 20, "cliprect.w == 20 assert failure")
+assert(cliprect.h == 20, "cliprect.h == 20 assert failure")
+
+cliprect = dst:fill({ 0,0,0,0 }, {150,0,50,50})
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 0, "cliprect.w == 0 assert failure")
+assert(cliprect.h == 0, "cliprect.h == 0 assert failure")
+
+cliprect = dst:fill({ 0,0,0,0 }, {100,0,50,50})
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 0, "cliprect.w == 0 assert failure")
+assert(cliprect.h == 0, "cliprect.h == 0 assert failure")
+
+cliprect = dst:fill({ 0,0,0,0 }, {-50,-50,200,200})
+assert(cliprect.x == 0, "cliprect.x == 0 assert failure")
+assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
+assert(cliprect.w == 100, "cliprect.w == 100 assert failure")
+assert(cliprect.h == 100, "cliprect.h == 100 assert failure")
+print("-- OK")
 
 
 print("test_surface.lua successfuly complete")

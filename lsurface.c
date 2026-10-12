@@ -6,12 +6,17 @@
 #include "lsurface.h"
 #include "ldisplay.h"
 #include "lrect.h"
+#include "lcolor.h"
 #include "lconsts.h"
 #include "lmethod.h"
+
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
 
 static int Surface_new(lua_State* L);
 static int Surface_blit(lua_State* L);
+static int Surface_fill(lua_State* L);
 static int Surface_get_size(lua_State* L);
 static int Surface_get_width(lua_State* L);
 static int Surface_get_height(lua_State* L);
@@ -30,6 +35,7 @@ const struct luaL_Reg lg_surface_module[] = {
 
 const struct luaL_Reg lg_Surface_methods[] = {
   {"blit", Surface_blit},
+  {"fill", Surface_fill},
   {"get_size", Surface_get_size},
   {"get_width", Surface_get_width},
   {"get_height", Surface_get_height},
@@ -136,6 +142,24 @@ static SDL_PixelFormat dispfmtalpha(void)
   return pfe;
 }
 
+static void cliprect(const SDL_Rect* src, const SDL_Rect* dst, SDL_Rect* res) {
+  int x, y, w, h;
+  int bottom, right;
+  x = MAX(src->x, dst->x);
+  y = MAX(src->y, dst->y);
+  right = MIN(src->x + src->w, dst->x + dst->w);
+  bottom = MIN(src->y + src->h, dst->y + dst->h);
+  w = right - x;
+  h = bottom - y;
+  res->x = 0; res->y = 0; res->w = 0; res->h = 0;
+  if (w > 0 && h > 0) {
+    res->x = x;
+    res->y = y;
+    res->w = w;
+    res->h = h;
+  }
+}
+
 static int Surface_new(lua_State* L) {
   int depth_passed = 0;
   int masks_passed = 0;
@@ -225,20 +249,53 @@ static int Surface_blit(lua_State* L) {
   lg_checkpoint2int(L, 3, &dstx, &dsty);
   dstrect.x = dstx; 
   dstrect.y = dsty;
-  dstrect.w = 0; 
-  dstrect.h = 0;
+  dstrect.w = _src->w;
+  dstrect.h = _src->h;
   pdstrect = &dstrect;
-  if (!lua_isnoneornil(L, 4)) {
+  if (!lua_isnoneornil(L, 4)) 
     srcrect = lg_checkrectarg(L, 4);
-    psrcrect = &srcrect;
-  }
   else {
-    psrcrect = NULL;
+    srcrect.x = 0;
+    srcrect.y = 0;
+    srcrect.w = self->surf->w;
+    srcrect.h = self->surf->h;
   }
+  psrcrect = &srcrect;
   if (!SDL_BlitSurface(_src, psrcrect, _dst, pdstrect)) {
     return luaL_error(L, SDL_GetError());
   }
-  return 0;
+  cliprect(psrcrect, pdstrect, lg_pushrect(L));
+  return 1;
+}
+
+static int Surface_fill(lua_State* L) {
+  lSurface* self = lg_checksurface(L, 1);
+  lColor color = lg_checkcolorarg(L, 2);
+  lRect dst, *pdst = NULL;
+  if (!lua_isnoneornil(L, 3))
+    dst = lg_checkrectarg(L, 3);
+  else {
+    dst.x = 0;
+    dst.y = 0;
+    dst.w = self->surf->w;
+    dst.h = self->surf->h;
+  }
+  pdst = &dst;
+  lRect src, *psrc;
+  src.x = 0; 
+  src.y = 0; 
+  src.w = self->surf->w; 
+  src.h = self->surf->h;
+  psrc = &src;
+  Uint32 p;
+  if (SDL_ISPIXELFORMAT_ALPHA(self->surf->format))
+    p = SDL_MapSurfaceRGBA(self->surf, color.r, color.g, color.b, color.a);
+  else
+    p = SDL_MapSurfaceRGB(self->surf, color.r, color.g, color.b);
+  if (!SDL_FillSurfaceRect(self->surf, pdst, p))
+    return luaL_error(L, SDL_GetError());
+  cliprect(psrc, pdst, lg_pushrect(L));
+  return 1;
 }
 
 static int Surface_get_size(lua_State* L) {
