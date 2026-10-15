@@ -8,6 +8,12 @@
 #include "lcolor.h"
 #include "lsurface.h"
 #include "ldisplay.h"
+#include "levent.h"
+#include "lconsts.h"
+
+#define PUSHCONST(L,name) \
+  lua_pushinteger((L), LGAME_##name); \
+  lua_setfield((L), -2, #name); \
 
 static void createmetatable(lua_State* L, 
   const char* name, 
@@ -45,29 +51,43 @@ static lua_CFunction getfunction(lua_State* L, const char* n, const struct luaL_
 }
 
 __declspec(dllexport) int luaopen_lgame(lua_State* L) {
-  createmetatable(L, LGAME_RECT_METATABLE, lg_Rect_methods, lg_Rect_metamethods);
-  createmetatable(L, LGAME_COLOR_METATABLE, lg_Color_methods, lg_Color_metamethods);
-  createmetatable(L, LGAME_SURFACE_METATABLE, lg_Surface_methods, lg_Surface_metamethods);
+  createmetatable(L, LGAME_RECT_METATABLE, lgame_Rect_methods, lgame_Rect_metamethods);
+  createmetatable(L, LGAME_COLOR_METATABLE, lgame_Color_methods, lgame_Color_metamethods);
+  createmetatable(L, LGAME_SURFACE_METATABLE, lgame_Surface_methods, lgame_Surface_metamethods);
+  createmetatable(L, LGAME_EVENT_METATABLE, lgame_Event_methods, lgame_Event_metamethods);
 
   lua_newtable(L);
   
   luaL_newmetatable(L, "LGAME_METATABLE");
-  lua_pushcfunction(L, getfunction(L, "quit", lg_base_module));
+  lua_pushcfunction(L, getfunction(L, "quit", lgame_base_module));
   lua_setfield(L, -2, "__gc");
   lua_setmetatable(L, -2);
 
-  createmodule(L, "rect", lg_rect_module);
-  createmodule(L, "color", lg_color_module);
-  createmodule(L, "surface", lg_surface_module);
-  createmodule(L, "display", lg_display_module);
+  createmodule(L, "rect", lgame_rect_module);
+  createmodule(L, "color", lgame_color_module);
+  createmodule(L, "surface", lgame_surface_module);
+  createmodule(L, "display", lgame_display_module);
+  createmodule(L, "event", lgame_event_module);
 
-  pushfunction(L, "init", getfunction(L, "init", lg_base_module));
-  pushfunction(L, "quit", getfunction(L, "quit", lg_base_module));
-  pushfunction(L, "get_init", getfunction(L, "get_init", lg_base_module));
+  pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
+  pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));
+  pushfunction(L, "get_init", getfunction(L, "get_init", lgame_base_module));
 
-  pushfunction(L, "Rect", getfunction(L, "Rect", lg_rect_module));
-  pushfunction(L, "Color", getfunction(L, "Color", lg_color_module));
-  pushfunction(L, "Surface", getfunction(L, "Surface", lg_surface_module));
+  pushfunction(L, "Rect", getfunction(L, "Rect", lgame_rect_module));
+  pushfunction(L, "Color", getfunction(L, "Color", lgame_color_module));
+  pushfunction(L, "Surface", getfunction(L, "Surface", lgame_surface_module));
+
+  PUSHCONST(L, NOEVENT);
+
+  PUSHCONST(L, QUIT);
+
+  PUSHCONST(L, KEYDOWN);
+  PUSHCONST(L, KEYUP);
+
+  PUSHCONST(L, MOUSEMOTION);
+  PUSHCONST(L, MOUSEBUTTONDOWN);
+  PUSHCONST(L, MOUSEBUTTONUP);
+  PUSHCONST(L, MOUSEWHEEL);
 
   return 1;
 }

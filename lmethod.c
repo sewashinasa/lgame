@@ -1,7 +1,7 @@
 
 #include "lmethod.h"
 
-void lg_getmethod(lua_State* L, int obji, const char* mn) {
+void lgame_getmethod(lua_State* L, int obji, const char* mn) {
   obji = lua_absindex(L, obji);
   lua_getmetatable(L, obji);
   if (lua_isnil(L, -1))

@@ -11,36 +11,36 @@ static int Rect__tostring(lua_State* L);
 static int Rect__index(lua_State* L);
 static int Rect__newindex(lua_State* L);
 
-const struct luaL_Reg lg_rect_module[] = {
+const struct luaL_Reg lgame_rect_module[] = {
   {"Rect", Rect_new},
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Rect_methods[] = {
+const struct luaL_Reg lgame_Rect_methods[] = {
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Rect_metamethods[] = {
+const struct luaL_Reg lgame_Rect_metamethods[] = {
   { "__tostring", Rect__tostring  },
   { "__index",    Rect__index     },
   { "__newindex", Rect__newindex  },
   { NULL, NULL }
 };
 
-lRect *lg_pushrect(lua_State* L) {
-  lRect* r;
-  r = (lRect*)lua_newuserdata(L, sizeof(lRect));
+lgame_Rect *lgame_pushrect(lua_State* L) {
+  lgame_Rect* r;
+  r = (lgame_Rect*)lua_newuserdata(L, sizeof(lgame_Rect));
   r->x = 0; r->y = 0; r->w = 0; r->h = 0;
   luaL_getmetatable(L, LGAME_RECT_METATABLE);
   lua_setmetatable(L, -2);
   return r;
 }
 
-lRect* lg_checkrect(lua_State* L, int idx) {
-  return (lRect*)luaL_checkudata(L, idx, LGAME_RECT_METATABLE);
+lgame_Rect* lgame_checkrect(lua_State* L, int idx) {
+  return (lgame_Rect*)luaL_checkudata(L, idx, LGAME_RECT_METATABLE);
 }
 
-void lg_pushpoint(lua_State* L, lPoint p) {
+void lgame_pushpoint(lua_State* L, lgame_Point p) {
   lua_newtable(L);
   lua_pushinteger(L, p.x);
   lua_rawseti(L, -2, 1);
@@ -48,14 +48,14 @@ void lg_pushpoint(lua_State* L, lPoint p) {
   lua_rawseti(L, -2, 2);
 }
 
-void lg_pushpoint2int(lua_State* L, int x, int y) {
-  lPoint p; p.x = x; p.y = y;
-  lg_pushpoint(L, p);
+void lgame_pushpoint2int(lua_State* L, int x, int y) {
+  lgame_Point p; p.x = x; p.y = y;
+  lgame_pushpoint(L, p);
 }
 
-lPoint lg_checkpoint(lua_State* L, int idx) {
+lgame_Point lgame_checkpoint(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
-  lPoint p;
+  lgame_Point p;
   luaL_checktype(L, idx, LUA_TTABLE);
   lua_rawgeti(L, idx, 1);
   p.x = (int)luaL_checkinteger(L, -1);
@@ -66,25 +66,25 @@ lPoint lg_checkpoint(lua_State* L, int idx) {
   return p;
 }
 
-void lg_checkpoint2int(lua_State* L, int idx, int* x, int* y) {
-  lPoint p = lg_checkpoint(L, idx);
+void lgame_checkpoint2int(lua_State* L, int idx, int* x, int* y) {
+  lgame_Point p = lgame_checkpoint(L, idx);
   if (x) *x = p.x;
   if (y) *y = p.y;
 }
 
-lRect lg_checkrecttable(lua_State* L, int idx) {
+lgame_Rect lgame_checkrecttable(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
-  lRect r;
+  lgame_Rect r;
   lua_Unsigned tl;
   luaL_checktype(L, idx, LUA_TTABLE);
   tl = lua_rawlen(L, idx);
   if (tl == 2) {
-    lPoint left, right;
+    lgame_Point left, right;
     lua_rawgeti(L, idx, 1);
-    left = lg_checkpoint(L, -1);
+    left = lgame_checkpoint(L, -1);
     lua_pop(L, 1);
     lua_rawgeti(L, idx, 2);
-    right = lg_checkpoint(L, -1);
+    right = lgame_checkpoint(L, -1);
     lua_pop(L, 1);
     r.x = left.x; r.y = left.y;
     r.w = right.x; r.h = right.y;
@@ -109,27 +109,27 @@ lRect lg_checkrecttable(lua_State* L, int idx) {
   return r;
 }
 
-lRect lg_checkrectarg(lua_State* L, int idx) {
+lgame_Rect lgame_checkrectarg(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
-  lRect r;
+  lgame_Rect r;
   if (lua_type(L, idx) == LUA_TTABLE) 
-    r = lg_checkrecttable(L, idx);
+    r = lgame_checkrecttable(L, idx);
   else if (lua_type(L, idx) == LUA_TUSERDATA) 
-    r = *lg_checkrect(L, idx);
+    r = *lgame_checkrect(L, idx);
   else 
     luaL_error(L, "invalid argument type for lgame.Rect: expected table or lgame.Rect, got %s", luaL_typename(L, idx));
   return r;
 }
 
-lRect lg_checkrectfromargs(lua_State* L, int offset) {
-  lRect r;
+lgame_Rect lgame_checkrectfromargs(lua_State* L, int offset) {
+  lgame_Rect r;
   int top = lua_gettop(L) - offset;
   if (top == 1) {
-    r = lg_checkrectarg(L, 1+offset);
+    r = lgame_checkrectarg(L, 1+offset);
   }
   else if (top == 2) {
-    lPoint left = lg_checkpoint(L, 1+offset);
-    lPoint right = lg_checkpoint(L, 2+offset);
+    lgame_Point left = lgame_checkpoint(L, 1+offset);
+    lgame_Point right = lgame_checkpoint(L, 2+offset);
     r.x = left.x; r.y = left.y;
     r.w = right.x; r.h = right.y;
   }
@@ -146,21 +146,21 @@ lRect lg_checkrectfromargs(lua_State* L, int offset) {
 }
 
 static int Rect_new(lua_State* L) {
-  lRect rect = lg_checkrectfromargs0(L);
-  lRect* self = lg_pushrect(L);
+  lgame_Rect rect = lgame_checkrectfromargs0(L);
+  lgame_Rect* self = lgame_pushrect(L);
   *self = rect;
   return 1;
 }
 
 static int Rect__tostring(lua_State* L) {
-  lRect* self = lg_checkrect(L, 1);
-  lua_pushfstring(L, "lgame.Rect(%d, %d, %d, %d)", 
+  lgame_Rect* self = lgame_checkrect(L, 1);
+  lua_pushfstring(L, "<Rect(%d, %d, %d, %d)>",
     self->x, self->y, self->w, self->h);
   return 1;
 }
 
 static int Rect__index(lua_State* L) {
-  lRect* self = lg_checkrect(L, 1);
+  lgame_Rect* self = lgame_checkrect(L, 1);
   if (lua_type(L, 2) == LUA_TSTRING) {
     const char* key = lua_tostring(L, 2);
     char fc = key[0];
@@ -177,7 +177,7 @@ static int Rect__index(lua_State* L) {
 }
 
 static int Rect__newindex(lua_State* L) {
-  lRect* self = lg_checkrect(L, 1);
+  lgame_Rect* self = lgame_checkrect(L, 1);
   if (lua_type(L, 2) == LUA_TSTRING) {
     const char* key = lua_tostring(L, 2);
     char fc = key[0];

@@ -11,21 +11,21 @@
 #define LGAME_COLOR_METATABLE "lgame.Color"
 #define LGAME_FCOLOR_METATABLE "lgame.FColor"
 
-typedef SDL_Color lColor;
-typedef SDL_FColor lFColor;
+typedef SDL_Color lgame_Color;
+typedef SDL_FColor lgame_FColor;
 
-extern const struct luaL_Reg lg_color_module[];
-extern const struct luaL_Reg lg_Color_methods[];
-extern const struct luaL_Reg lg_Color_metamethods[];
+extern const struct luaL_Reg lgame_color_module[];
+extern const struct luaL_Reg lgame_Color_methods[];
+extern const struct luaL_Reg lgame_Color_metamethods[];
 
-lColor* lg_pushcolor(lua_State* L);
-lColor* lg_checkcolor(lua_State* L, int idx);
-lColor lg_checkcolortable(lua_State* L, int idx);
-lColor lg_unpack32(Uint32 color);
-lColor lg_checkcolorarg(lua_State* L, int idx);
+lgame_Color* lgame_pushcolor(lua_State* L);
+lgame_Color* lgame_checkcolor(lua_State* L, int idx);
+lgame_Color lgame_checkcolortable(lua_State* L, int idx);
+lgame_Color lgame_unpack32(Uint32 color);
+lgame_Color lgame_checkcolorarg(lua_State* L, int idx);
 
-#define lg_checkcolorfromargs0(L) lg_checkcolorfromargs((L), 0)
-#define lg_checkcolorfromargs1(L) lg_checkcolorfromargs((L), 1)
+#define lgame_checkcolorfromargs0(L) lgame_checkcolorfromargs((L), 0)
+#define lgame_checkcolorfromargs1(L) lgame_checkcolorfromargs((L), 1)
 
 
 #endif

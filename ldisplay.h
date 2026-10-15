@@ -12,12 +12,12 @@
 
 
 #define LGAME_WINDOWSURFACE_KEY "LGAME_WINDOWSURFACE"
-#define lg_getwindowsurface(L) lua_getfield((L), LUA_REGISTRYINDEX, LGAME_WINDOWSURFACE_KEY)
-#define lg_setwindowsurface(L) lua_setfield((L), LUA_REGISTRYINDEX, LGAME_WINDOWSURFACE_KEY)
+#define lgame_getwindowsurface(L) lua_getfield((L), LUA_REGISTRYINDEX, LGAME_WINDOWSURFACE_KEY)
+#define lgame_setwindowsurface(L) lua_setfield((L), LUA_REGISTRYINDEX, LGAME_WINDOWSURFACE_KEY)
 
-extern const struct luaL_Reg lg_display_module[];
+extern const struct luaL_Reg lgame_display_module[];
 
-SDL_Surface* lg_get_windowsurface(void);
-SDL_Window* lg_get_window(void);
+SDL_Surface* lgame_get_windowsurface(void);
+SDL_Window* lgame_get_window(void);
 
 #endif

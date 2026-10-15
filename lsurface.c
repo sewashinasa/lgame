@@ -28,12 +28,12 @@ static int Surface__index(lua_State* L);
 static int Surface__tostring(lua_State* L);
 static int Surface__gc(lua_State* L);
 
-const struct luaL_Reg lg_surface_module[] = {
+const struct luaL_Reg lgame_surface_module[] = {
   {"Surface", Surface_new},
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Surface_methods[] = {
+const struct luaL_Reg lgame_Surface_methods[] = {
   {"blit", Surface_blit},
   {"fill", Surface_fill},
   {"get_size", Surface_get_size},
@@ -46,7 +46,7 @@ const struct luaL_Reg lg_Surface_methods[] = {
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Surface_metamethods[] = {
+const struct luaL_Reg lgame_Surface_metamethods[] = {
   {"__index", Surface__index},
   {"__tostring", Surface__tostring},
   {"__gc", Surface__gc},
@@ -54,9 +54,9 @@ const struct luaL_Reg lg_Surface_metamethods[] = {
 };
 
 
-lSurface* lg_pushsurface(lua_State* L) {
-  lSurface* s;
-  s = (lSurface*)lua_newuserdata(L, sizeof(lSurface));
+lgame_Surface* lgame_pushsurface(lua_State* L) {
+  lgame_Surface* s;
+  s = (lgame_Surface*)lua_newuserdata(L, sizeof(lgame_Surface));
   s->surf = NULL;
   s->isws = 0;
   luaL_getmetatable(L, LGAME_SURFACE_METATABLE);
@@ -64,14 +64,14 @@ lSurface* lg_pushsurface(lua_State* L) {
   return s;
 }
 
-lSurface* lg_checksurface(lua_State* L, int idx) {
-  lSurface *s = (lSurface*)luaL_checkudata(L, idx, LGAME_SURFACE_METATABLE);
+lgame_Surface* lgame_checksurface(lua_State* L, int idx) {
+  lgame_Surface*s = (lgame_Surface*)luaL_checkudata(L, idx, LGAME_SURFACE_METATABLE);
   if (!s->surf) luaL_error(L, "invalid lgame.Surface: surface is NULL");
   return s;
 }
 
-lSurface* lg_testsurface(lua_State* L, int idx) {
-  return (lSurface*)luaL_testudata(L, idx, LGAME_SURFACE_METATABLE);
+lgame_Surface* lgame_testsurface(lua_State* L, int idx) {
+  return (lgame_Surface*)luaL_testudata(L, idx, LGAME_SURFACE_METATABLE);
 }
 
 static int counttruebits(Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask) {
@@ -96,7 +96,7 @@ static SDL_PixelFormat dispfmtalpha(void)
   Uint32 Bmask = 0x000000ff;
   int _empty;
 
-  dispsurf = lg_get_windowsurface();
+  dispsurf = lgame_get_windowsurface();
   if (!dispsurf) {
     SDL_SetError("no video mode has been set");
     return SDL_PIXELFORMAT_UNKNOWN;
@@ -167,10 +167,10 @@ static int Surface_new(lua_State* L) {
   Uint32 flags;
   int depth;
   Uint32 Rmask, Gmask, Bmask, Amask;
-  lSurface* self;
+  lgame_Surface* self;
   SDL_PixelFormat pf;
 
-  lg_checkpoint2int(L, 1, &sw, &sh);
+  lgame_checkpoint2int(L, 1, &sw, &sh);
   flags = (Uint32)luaL_optinteger(L, 2, 0);
   depth = (int)luaL_optinteger(L, 3, -1);
   if (depth != -1) depth_passed = 1;
@@ -220,7 +220,7 @@ static int Surface_new(lua_State* L) {
 
   if (pf == 0) return luaL_error(L, SDL_GetError());
 
-  self = lg_pushsurface(L);
+  self = lgame_pushsurface(L);
   self->surf = SDL_CreateSurface(sw, sh, pf);
   if (!self->surf) return luaL_error(L, SDL_GetError());
 
@@ -235,25 +235,25 @@ static int Surface_new(lua_State* L) {
 }
 
 static int Surface_blit(lua_State* L) {
-  lSurface* self;
-  lSurface* src;
+  lgame_Surface* self;
+  lgame_Surface* src;
   SDL_Surface* _src;
   SDL_Surface* _dst;
   int dstx, dsty;
   SDL_Rect* pdstrect, * psrcrect;
   SDL_Rect dstrect, srcrect;
-  self = lg_checksurface(L, 1); 
-  src = lg_checksurface(L, 2);
+  self = lgame_checksurface(L, 1); 
+  src = lgame_checksurface(L, 2);
   _src = src->surf;
   _dst = self->surf;
-  lg_checkpoint2int(L, 3, &dstx, &dsty);
+  lgame_checkpoint2int(L, 3, &dstx, &dsty);
   dstrect.x = dstx; 
   dstrect.y = dsty;
   dstrect.w = _src->w;
   dstrect.h = _src->h;
   pdstrect = &dstrect;
   if (!lua_isnoneornil(L, 4)) 
-    srcrect = lg_checkrectarg(L, 4);
+    srcrect = lgame_checkrectarg(L, 4);
   else {
     srcrect.x = 0;
     srcrect.y = 0;
@@ -264,16 +264,16 @@ static int Surface_blit(lua_State* L) {
   if (!SDL_BlitSurface(_src, psrcrect, _dst, pdstrect)) {
     return luaL_error(L, SDL_GetError());
   }
-  cliprect(psrcrect, pdstrect, lg_pushrect(L));
+  cliprect(psrcrect, pdstrect, lgame_pushrect(L));
   return 1;
 }
 
 static int Surface_fill(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
-  lColor color = lg_checkcolorarg(L, 2);
-  lRect dst, *pdst = NULL;
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lgame_Color color = lgame_checkcolorarg(L, 2);
+  lgame_Rect dst, *pdst = NULL;
   if (!lua_isnoneornil(L, 3))
-    dst = lg_checkrectarg(L, 3);
+    dst = lgame_checkrectarg(L, 3);
   else {
     dst.x = 0;
     dst.y = 0;
@@ -281,7 +281,7 @@ static int Surface_fill(lua_State* L) {
     dst.h = self->surf->h;
   }
   pdst = &dst;
-  lRect src, *psrc;
+  lgame_Rect src, *psrc;
   src.x = 0; 
   src.y = 0; 
   src.w = self->surf->w; 
@@ -294,36 +294,44 @@ static int Surface_fill(lua_State* L) {
     p = SDL_MapSurfaceRGB(self->surf, color.r, color.g, color.b);
   if (!SDL_FillSurfaceRect(self->surf, pdst, p))
     return luaL_error(L, SDL_GetError());
-  cliprect(psrc, pdst, lg_pushrect(L));
+  cliprect(psrc, pdst, lgame_pushrect(L));
+  return 1;
+}
+
+static int Surface_get_flags(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  Uint32 flags = 0;
+  if (SDL_ISPIXELFORMAT_ALPHA(self->surf->format))
+    flags |= LGAME_SRCALPHA;
   return 1;
 }
 
 static int Surface_get_size(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
-  lg_pushpoint2int(L, self->surf->w, self->surf->h);
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lgame_pushpoint2int(L, self->surf->w, self->surf->h);
   return 1;
 }
 
 static int Surface_get_width(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   lua_pushinteger(L, self->surf->w);
   return 1;
 }
 
 static int Surface_get_height(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   lua_pushinteger(L, self->surf->h);
   return 1;
 }
 
 static int Surface_get_bytesize(lua_State *L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   lua_pushinteger(L, SDL_BYTESPERPIXEL(self->surf->format));
   return 1;
 }
 
 static int Surface_get_bitsize(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   lua_pushinteger(L, SDL_BITSPERPIXEL(self->surf->format));
   return 1;
 }
@@ -342,7 +350,7 @@ static int Surface_get_bitsize(lua_State* L) {
 static int Surface_get_masks(lua_State* L) {
   Uint32 Rmask, Gmask, Bmask, Amask;
   int _empty;
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   if (!SDL_GetMasksForPixelFormat(self->surf->format, &_empty, &Rmask, &Gmask, &Bmask, &Amask))
     return luaL_error(L, SDL_GetError());
   push4ints(L, Rmask, Gmask, Bmask, Amask);
@@ -350,21 +358,21 @@ static int Surface_get_masks(lua_State* L) {
 }
 
 static int Surface_get_shifts(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   const SDL_PixelFormatDetails *pfd = SDL_GetPixelFormatDetails(self->surf->format);
   push4ints(L, pfd->Rshift, pfd->Gshift, pfd->Bshift, pfd->Ashift);
   return 1;
 }
 
 static int Surface__index(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   const char* key = luaL_checkstring(L, 2);
-  lg_getmethod(L, 1, key);
+  lgame_getmethod(L, 1, key);
   return 1;
 }
 
 static int Surface__tostring(lua_State* L) {
-  lSurface* self = lg_checksurface(L, 1);
+  lgame_Surface* self = lgame_checksurface(L, 1);
   int sw = self->surf->w;
   int sh = self->surf->h;
   int sbpp = SDL_BITSPERPIXEL(self->surf->format);
@@ -373,7 +381,7 @@ static int Surface__tostring(lua_State* L) {
 }
 
 static int Surface__gc(lua_State* L) {
-  lSurface* self = lg_testsurface(L, 1);
+  lgame_Surface* self = lgame_testsurface(L, 1);
   if (self->surf && !self->isws) {
     SDL_DestroySurface(self->surf);
     self->surf = NULL;

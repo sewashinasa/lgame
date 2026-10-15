@@ -15,39 +15,39 @@ static int Color__tostring(lua_State * L);
 static int Color__index(lua_State * L);
 static int Color__newindex(lua_State * L);
 
-const struct luaL_Reg lg_color_module[] = {
+const struct luaL_Reg lgame_color_module[] = {
   {"Color", Color_new},
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Color_methods[] = {
+const struct luaL_Reg lgame_Color_methods[] = {
   {NULL, NULL}
 };
 
-const struct luaL_Reg lg_Color_metamethods[] = {
+const struct luaL_Reg lgame_Color_metamethods[] = {
   {"__tostring", Color__tostring},
   {"__index", Color__index},
   {"__newindex", Color__newindex},
   { NULL, NULL }
 };
 
-lColor* lg_pushcolor(lua_State* L) {
-  lColor* c;
-  c = (lColor*)lua_newuserdata(L, sizeof(lColor));
+lgame_Color* lgame_pushcolor(lua_State* L) {
+  lgame_Color* c;
+  c = (lgame_Color*)lua_newuserdata(L, sizeof(lgame_Color));
   c->r = 0; c->g = 0; c->b = 0; c->a = 0;
   luaL_getmetatable(L, LGAME_COLOR_METATABLE);
   lua_setmetatable(L, -2);
   return c;
 }
 
-lColor* lg_checkcolor(lua_State* L, int idx) {
-  return (lColor*)luaL_checkudata(L, idx, LGAME_COLOR_METATABLE);
+lgame_Color* lgame_checkcolor(lua_State* L, int idx) {
+  return (lgame_Color*)luaL_checkudata(L, idx, LGAME_COLOR_METATABLE);
 }
 
-lColor lg_checkcolortable(lua_State* L, int idx) {
+lgame_Color lgame_checkcolortable(lua_State* L, int idx) {
   lua_Integer r, g, b, a;
   idx = lua_absindex(L, idx);
-  lColor c;
+  lgame_Color c;
   luaL_checktype(L, idx, LUA_TTABLE);
   lua_rawgeti(L, idx, 1);
   r = luaL_checkinteger(L, -1);
@@ -74,8 +74,8 @@ lColor lg_checkcolortable(lua_State* L, int idx) {
   return c;
 }
 
-lColor lg_unpack32(Uint32 color) {
-  lColor c;
+lgame_Color lgame_unpack32(Uint32 color) {
+  lgame_Color c;
   c.r = (Uint8)((color >> 24) & 0xFF);
   c.g = (Uint8)((color >> 16) & 0xFF);
   c.b = (Uint8)((color >> 8) & 0xFF);
@@ -83,25 +83,25 @@ lColor lg_unpack32(Uint32 color) {
   return c;
 }
 
-lColor lg_checkcolorarg(lua_State* L, int idx) {
+lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
-  lColor c;
+  lgame_Color c;
   if (lua_type(L, idx) == LUA_TTABLE)
-    c = lg_checkcolortable(L, idx);
+    c = lgame_checkcolortable(L, idx);
   else if (lua_type(L, idx) == LUA_TNUMBER)
-    c = lg_unpack32((Uint32)luaL_checkinteger(L, idx));
+    c = lgame_unpack32((Uint32)luaL_checkinteger(L, idx));
   else if (lua_type(L, idx) == LUA_TUSERDATA)
-    c = *lg_checkcolor(L, idx);
+    c = *lgame_checkcolor(L, idx);
   else
     luaL_error(L, "invalid argument type for lgame.Color: expected table or lgame.Color, got %s", luaL_typename(L, idx));
   return c;
 }
 
-lColor lg_checkcolorfromargs(lua_State* L, int offset) {
-  lColor c;
+lgame_Color lgame_checkcolorfromargs(lua_State* L, int offset) {
+  lgame_Color c;
   int top = lua_gettop(L) - offset;
   if (top == 1) {
-    c = lg_checkcolorarg(L, 1 + offset);
+    c = lgame_checkcolorarg(L, 1 + offset);
   }
   else if (top == 3 || top == 4) {
     lua_Integer r, g, b, a;
@@ -131,20 +131,20 @@ lColor lg_checkcolorfromargs(lua_State* L, int offset) {
 }
 
 static int Color_new(lua_State* L) {
-  lColor color = lg_checkcolorfromargs0(L);
-  lColor* self = lg_pushcolor(L);
+  lgame_Color color = lgame_checkcolorfromargs0(L);
+  lgame_Color* self = lgame_pushcolor(L);
   *self = color;
   return 1;
 }
 
 static int Color__tostring(lua_State* L) {
-  lColor* self = lg_checkcolor(L, 1);
-  lua_pushfstring(L, "lgame.Color(%d, %d, %d, %d)", self->r, self->g, self->b, self->a);
+  lgame_Color* self = lgame_checkcolor(L, 1);
+  lua_pushfstring(L, "(%d, %d, %d, %d)", self->r, self->g, self->b, self->a);
   return 1;
 }
 
 static int Color__index(lua_State* L) {
-  lColor* self = lg_checkcolor(L, 1);
+  lgame_Color* self = lgame_checkcolor(L, 1);
   if (lua_type(L, 2) == LUA_TSTRING) {
     const char* key = lua_tostring(L, 2);
     char fc = key[0];
@@ -161,7 +161,7 @@ static int Color__index(lua_State* L) {
 }
 
 static int Color__newindex(lua_State* L) {
-  lColor* self = lg_checkcolor(L, 1);
+  lgame_Color* self = lgame_checkcolor(L, 1);
   if (lua_type(L, 2) == LUA_TSTRING) {
     const char* key = lua_tostring(L, 2);
     char fc = key[0];

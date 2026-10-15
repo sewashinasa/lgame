@@ -6,6 +6,6 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
-void lg_getmethod(lua_State* L, int obji, const char* mn);
+void lgame_getmethod(lua_State* L, int obji, const char* mn);
 
 #endif

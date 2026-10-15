@@ -8,12 +8,12 @@
 
 #include <SDL3/SDL_rect.h>
 
-typedef SDL_Point lPoint;
+typedef SDL_Point lgame_Point;
 
-void lg_pushpoint(lua_State* L, lPoint p);
-lPoint lg_checkpoint(lua_State* L, int idx);
+void lgame_pushpoint(lua_State* L, lgame_Point p);
+lgame_Point lgame_checkpoint(lua_State* L, int idx);
 
-void lg_pushpoint2int(lua_State* L, int x, int y);
-void lg_checkpoint2int(lua_State* L, int idx, int* x, int* y);
+void lgame_pushpoint2int(lua_State* L, int x, int y);
+void lgame_checkpoint2int(lua_State* L, int idx, int* x, int* y);
 
 #endif

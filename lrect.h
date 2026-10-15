@@ -10,24 +10,24 @@
 
 #define LGAME_RECT_METATABLE "lgame.Rect"
 
-typedef SDL_Rect lRect;
-typedef SDL_Point lPoint;
+typedef SDL_Rect lgame_Rect;
+typedef SDL_Point lgame_Point;
 
-extern const struct luaL_Reg lg_rect_module[];
-extern const struct luaL_Reg lg_Rect_methods[];
-extern const struct luaL_Reg lg_Rect_metamethods[];
+extern const struct luaL_Reg lgame_rect_module[];
+extern const struct luaL_Reg lgame_Rect_methods[];
+extern const struct luaL_Reg lgame_Rect_metamethods[];
 
-lRect* lg_pushrect(lua_State* L);
-lRect* lg_checkrect(lua_State* L, int idx);
-void lg_pushpoint(lua_State* L, lPoint p);
-void lg_pushpoint2int(lua_State* L, int x, int y);
-lPoint lg_checkpoint(lua_State* L, int idx);
-void lg_checkpoint2int(lua_State* L, int idx, int* x, int* y);
-lRect lg_checkrecttable(lua_State* L, int idx);
-lRect lg_checkrectarg(lua_State* L, int idx);
-lRect lg_checkrectfromargs(lua_State* L, int offset);
+lgame_Rect* lgame_pushrect(lua_State* L);
+lgame_Rect* lgame_checkrect(lua_State* L, int idx);
+void lgame_pushpoint(lua_State* L, lgame_Point p);
+void lgame_pushpoint2int(lua_State* L, int x, int y);
+lgame_Point lgame_checkpoint(lua_State* L, int idx);
+void lgame_checkpoint2int(lua_State* L, int idx, int* x, int* y);
+lgame_Rect lgame_checkrecttable(lua_State* L, int idx);
+lgame_Rect lgame_checkrectarg(lua_State* L, int idx);
+lgame_Rect lgame_checkrectfromargs(lua_State* L, int offset);
 
-#define lg_checkrectfromargs0(L) lg_checkrectfromargs((L), 0)
-#define lg_checkrectfromargs1(L) lg_checkrectfromargs((L), 1)
+#define lgame_checkrectfromargs0(L) lgame_checkrectfromargs((L), 0)
+#define lgame_checkrectfromargs1(L) lgame_checkrectfromargs((L), 1)
 
 #endif

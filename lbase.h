@@ -6,6 +6,6 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
-extern const struct luaL_Reg lg_base_module[];
+extern const struct luaL_Reg lgame_base_module[];
 
 #endif
