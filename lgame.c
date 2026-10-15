@@ -9,6 +9,7 @@
 #include "lsurface.h"
 #include "ldisplay.h"
 #include "levent.h"
+#include "lmouse.h"
 #include "lconsts.h"
 
 #define PUSHCONST(L,name) \
@@ -68,6 +69,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "surface", lgame_surface_module);
   createmodule(L, "display", lgame_display_module);
   createmodule(L, "event", lgame_event_module);
+  createmodule(L, "mouse", lgame_mouse_module);
 
   pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
   pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));

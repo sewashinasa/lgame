@@ -66,8 +66,26 @@ lgame_Point lgame_checkpoint(lua_State* L, int idx) {
   return p;
 }
 
+lgame_Point lgame_checkpointfromargs(lua_State* L, int offset) {
+  int top = lua_gettop(L) - offset;
+  if (top == 1)
+    return lgame_checkpoint(L, 1 + offset);
+  else {
+    lgame_Point p;
+    p.x = (int)luaL_checkinteger(L, 1 + offset);
+    p.y = (int)luaL_checkinteger(L, 2 + offset);
+    return p;
+  }
+}
+
 void lgame_checkpoint2int(lua_State* L, int idx, int* x, int* y) {
   lgame_Point p = lgame_checkpoint(L, idx);
+  if (x) *x = p.x;
+  if (y) *y = p.y;
+}
+
+void lgame_checkpoint2intfromargs(lua_State* L, int offset, int* x, int* y) {
+  lgame_Point p = lgame_checkpointfromargs(L, offset);
   if (x) *x = p.x;
   if (y) *y = p.y;
 }
