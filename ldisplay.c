@@ -66,6 +66,7 @@ static int display_quit(lua_State* L) {
   if (SDL_WasInit(SDL_INIT_VIDEO))
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
   lgame_display_initialized = 0;
+  lgame_display_mode_set = 0;
   return 0;
 }
 

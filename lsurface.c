@@ -212,8 +212,16 @@ static int Surface_new(lua_State* L) {
           depth += 8;
     }
     else if (!depth_passed && !masks_passed) {
+      SDL_Surface* sample;
       depth = 32;
-      Rmask = 0; Gmask = 0; Bmask = 0; Amask = 0;
+      Rmask = 0; 
+      Gmask = 0; 
+      Bmask = 0; 
+      Amask = 0;
+      sample = lgame_get_windowsurface();
+      if (sample)
+        if (!SDL_GetMasksForPixelFormat(sample->format, &depth, &Rmask, &Gmask, &Bmask, &Amask))
+          return luaL_error(L, SDL_GetError());
     }
     pf = SDL_GetPixelFormatForMasks(depth, Rmask, Gmask, Bmask, Amask);
   }

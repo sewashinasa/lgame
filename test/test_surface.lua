@@ -9,7 +9,7 @@ local format = string.format
 local assert = assert
 local print = print
 
-local s;
+local ws, s;
 local bypp, bipp;
 local possible_depth, possible_masks;
 local m, rm, gm, bm, am;
@@ -171,6 +171,24 @@ assert(cliprect.y == 0, "cliprect.y == 0 assert failure")
 assert(cliprect.w == 100, "cliprect.w == 100 assert failure")
 assert(cliprect.h == 100, "cliprect.h == 100 assert failure")
 print("-- OK")
+
+
+lgame.display.init()
+ws = lgame.display.set_mode({1,1})
+s = Surface({0,0})
+assert(s:get_bitsize() == ws:get_bitsize(), 
+  "s:get_bitsize() == ws:get_bitsize() assert failure")
+assert(s:get_masks()[1] == ws:get_masks()[1],
+  "s:get_masks()[1] == ws:get_masks()[1] assert failure")
+assert(s:get_masks()[2] == ws:get_masks()[2],
+  "s:get_masks()[2] == ws:get_masks()[2] assert failure")
+assert(s:get_masks()[3] == ws:get_masks()[3],
+  "s:get_masks()[3] == ws:get_masks()[3] assert failure")
+assert(s:get_masks()[4] == ws:get_masks()[4],
+  "s:get_masks()[4] == ws:get_masks()[4] assert failure")
+lgame.display.quit()
+print("-- OK")
+
 
 
 print("test_surface.lua successfuly complete")
