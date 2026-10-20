@@ -10,6 +10,7 @@
 #include "ldisplay.h"
 #include "levent.h"
 #include "lmouse.h"
+#include "lkey.h"
 #include "lconsts.h"
 
 #define PUSHCONST(L,name) \
@@ -21,10 +22,13 @@ static void createmetatable(lua_State* L,
   const struct luaL_Reg* methods, 
   const struct luaL_Reg* metamethods) {
   luaL_newmetatable(L, name);
-  luaL_setfuncs(L, metamethods, 0);
-  lua_newtable(L);
-  luaL_setfuncs(L, methods, 0);
-  lua_setfield(L, -2, "METHODS");
+  if (metamethods) 
+    luaL_setfuncs(L, metamethods, 0);
+  if (methods) {
+    lua_newtable(L);
+    luaL_setfuncs(L, methods, 0);
+    lua_setfield(L, -2, "METHODS");
+  }
 }
 
 static void createmodule(lua_State* L,
@@ -56,6 +60,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmetatable(L, LGAME_COLOR_METATABLE, lgame_Color_methods, lgame_Color_metamethods);
   createmetatable(L, LGAME_SURFACE_METATABLE, lgame_Surface_methods, lgame_Surface_metamethods);
   createmetatable(L, LGAME_EVENT_METATABLE, lgame_Event_methods, lgame_Event_metamethods);
+  createmetatable(L, LGAME_SCANCODEWRAPPER_METATABLE, NULL, lgame_ScancodeWrapper_methods);
 
   lua_newtable(L);
   
@@ -70,6 +75,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "display", lgame_display_module);
   createmodule(L, "event", lgame_event_module);
   createmodule(L, "mouse", lgame_mouse_module);
+  createmodule(L, "key", lgame_key_module);
 
   pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
   pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));
