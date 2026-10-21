@@ -85,6 +85,8 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   pushfunction(L, "Color", getfunction(L, "Color", lgame_color_module));
   pushfunction(L, "Surface", getfunction(L, "Surface", lgame_surface_module));
 
+  PUSHCONST(L, SRCALPHA);
+
   PUSHCONST(L, NOEVENT);
 
   PUSHCONST(L, QUIT);
