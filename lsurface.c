@@ -17,6 +17,8 @@
 static int Surface_new(lua_State* L);
 static int Surface_blit(lua_State* L);
 static int Surface_fill(lua_State* L);
+static int Surface_convert(lua_State* L);
+static int Surface_convert_alpha(lua_State* L);
 static int Surface_get_size(lua_State* L);
 static int Surface_get_width(lua_State* L);
 static int Surface_get_height(lua_State* L);
@@ -36,6 +38,8 @@ const struct luaL_Reg lgame_surface_module[] = {
 const struct luaL_Reg lgame_Surface_methods[] = {
   {"blit", Surface_blit},
   {"fill", Surface_fill},
+  {"convert", Surface_convert},
+  {"convert_alpha", Surface_convert_alpha},
   {"get_size", Surface_get_size},
   {"get_width", Surface_get_width},
   {"get_height", Surface_get_height},
@@ -303,6 +307,99 @@ static int Surface_fill(lua_State* L) {
   if (!SDL_FillSurfaceRect(self->surf, pdst, p))
     return luaL_error(L, SDL_GetError());
   cliprect(psrc, pdst, lgame_pushrect(L));
+  return 1;
+}
+
+#define CONVERT_FROM_NONE 0x0
+#define CONVERT_FROM_DEPTH 0x1
+#define CONVERT_FROM_MASKS 0x2
+#define CONVERT_FROM_SURFACE 0x3
+
+static int Surface_convert(lua_State* L) {
+  lgame_Surface* self;
+  lgame_Surface* sample;
+  lgame_Surface* conv;
+  SDL_Surface* sdlsample;
+  int depth;
+  Uint32 Rmask, Gmask, Bmask, Amask;
+  SDL_PixelFormat cpf;
+  int convert_from;
+  self = lgame_checksurface(L, 1);
+  if (lua_isinteger(L, 2))
+    convert_from = CONVERT_FROM_DEPTH;
+  else if (lua_istable(L, 2))
+    convert_from = CONVERT_FROM_MASKS;
+  else if (lua_isuserdata(L, 2))
+    convert_from = CONVERT_FROM_SURFACE;
+  else if (lua_isnoneornil(L, 2))
+    convert_from = CONVERT_FROM_NONE;
+  else
+    return luaL_error(L, "invalid argument");
+  switch (convert_from) {
+  case (CONVERT_FROM_DEPTH):
+    depth = (int)lua_tointeger(L, 2);
+    Rmask = 0; Gmask = 0; Bmask = 0; Amask = 0;
+    break;
+  case (CONVERT_FROM_MASKS):
+    lua_rawgeti(L, 2, 1);
+    Rmask = (Uint32)luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    lua_rawgeti(L, 2, 2);
+    Gmask = (Uint32)luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    lua_rawgeti(L, 2, 3);
+    Bmask = (Uint32)luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    lua_rawgeti(L, 2, 4);
+    Amask = (Uint32)luaL_checkinteger(L, -1);
+    lua_pop(L, 1);
+    depth = counttruebits(Rmask, Gmask, Bmask, Amask);
+    if (Rmask == 0xFF000000 && /* RGBX8888 only 32-bit */
+      Gmask == 0x00FF0000 &&
+      Bmask == 0x0000FF00 &&
+      Amask == 0x00000000)
+      depth += 8;
+    if (Rmask == 0x0000FF00 && /* BGRX8888 only 32-bit */
+      Gmask == 0x00FF0000 &&
+      Bmask == 0xFF000000 &&
+      Amask == 0x00000000)
+      depth += 8;
+    break;
+  case (CONVERT_FROM_SURFACE):
+    sample = lgame_checksurface(L, 2);
+    if (!SDL_GetMasksForPixelFormat(sample->surf->format, &depth, &Rmask, &Gmask, &Bmask, &Amask))
+      return luaL_error(L, SDL_GetError());
+    break;
+  case (CONVERT_FROM_NONE):
+    sdlsample = lgame_get_windowsurface();
+    if (!sdlsample)
+      return luaL_error(L, "no video mode has been set");
+    if (!SDL_GetMasksForPixelFormat(sdlsample->format, &depth, &Rmask, &Gmask, &Bmask, &Amask))
+      return luaL_error(L, SDL_GetError());
+    break;
+  }
+  cpf = SDL_GetPixelFormatForMasks(depth, Rmask, Gmask, Bmask, Amask);
+  if (!cpf)
+    return luaL_error(L, SDL_GetError());
+  conv = lgame_pushsurface(L);
+  conv->surf = SDL_ConvertSurface(self->surf, cpf);
+  if (!conv->surf)
+    return luaL_error(L, SDL_GetError());
+  return 1;
+}
+
+static int Surface_convert_alpha(lua_State* L) {
+  lgame_Surface* self;
+  lgame_Surface* conv;
+  SDL_PixelFormat pfa;
+  self = lgame_checksurface(L, 1);
+  pfa = dispfmtalpha();
+  if (!pfa)
+    return luaL_error(L, SDL_GetError());
+  conv = lgame_pushsurface(L);
+  conv->surf = SDL_ConvertSurface(self->surf, pfa);
+  if (!conv->surf)
+    return luaL_error(L, SDL_GetError());
   return 1;
 }
 
