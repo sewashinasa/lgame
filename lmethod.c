@@ -6,7 +6,7 @@ void lgame_getmethod(lua_State* L, int obji, const char* mn) {
   lua_getmetatable(L, obji);
   if (lua_isnil(L, -1))
     return;
-  lua_getfield(L, -1, "METHODS");
+  lua_getfield(L, -1, LGAME_METHODS);
   lua_remove(L, -2);
   if (lua_isnil(L, -1))
     return;

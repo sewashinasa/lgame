@@ -6,6 +6,8 @@
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
 
+#define LGAME_METHODS "LGAME_METHODS"
+
 void lgame_getmethod(lua_State* L, int obji, const char* mn);
 
 #endif

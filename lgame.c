@@ -12,6 +12,7 @@
 #include "lmouse.h"
 #include "lkey.h"
 #include "lconsts.h"
+#include "lmethod.h"
 
 #define PUSHCONST(L,name) \
   lua_pushinteger((L), LGAME_##name); \
@@ -27,7 +28,7 @@ static void createmetatable(lua_State* L,
   if (methods) {
     lua_newtable(L);
     luaL_setfuncs(L, methods, 0);
-    lua_setfield(L, -2, "METHODS");
+    lua_setfield(L, -2, LGAME_METHODS);
   }
 }
 
