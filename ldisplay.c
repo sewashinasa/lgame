@@ -13,12 +13,14 @@ static int display_init(lua_State* L);
 static int display_quit(lua_State* L);
 static int display_get_init(lua_State* L);
 static int display_set_mode(lua_State* L);
+static int display_flip(lua_State* L);
 
 const struct luaL_Reg lgame_display_module[] = {
   {"init", display_init},
   {"quit", display_quit},
   {"get_init", display_get_init},
   {"set_mode", display_set_mode},
+  {"flip", display_flip},
   {NULL, NULL}
 };
 
@@ -115,4 +117,12 @@ static int display_set_mode(lua_State* L) {
   lgame_display_mode_set = 1;
 
   return 1;
+}
+
+static int display_flip(lua_State* L) {
+  if (!lgame_display_mode_set)
+    return luaL_error(L, "window not opened");
+  if (!SDL_UpdateWindowSurface(lgame_Window))
+    return luaL_error(L, SDL_GetError());
+  return 0;
 }

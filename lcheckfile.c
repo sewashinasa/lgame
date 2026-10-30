@@ -7,99 +7,31 @@
 #include "lcheckfile.h"
 
 
-static size_t stdio_fwrite(
-  void* userdata, 
-  const void* ptr, 
-  size_t size, 
-  SDL_IOStatus* status) {
-  size_t res;
-  FILE* fp = (FILE*)userdata;
-  *status = SDL_IO_STATUS_READY;
-  res = fwrite(ptr, size, 1, fp);
-  if (res == 0) 
-    *status = SDL_IO_STATUS_ERROR;
-  return res;
-}
 
-static size_t stdio_fread(
-  void* userdata,
-  void* ptr,
-  size_t size,
-  SDL_IOStatus* status) {
-  size_t res;
-  FILE* fp = (FILE*)userdata;
-  *status = SDL_IO_STATUS_READY;
-  res = fread(ptr, size, 1, fp);
-  if (res == 0)
-    *status = SDL_IO_STATUS_ERROR;
-  return res;
-}
-
-static bool stdio_flush(
-  void* userdata,
-  SDL_IOStatus* status) {
-  int res;
-  FILE* fp = (FILE*)userdata;
-  res = fflush(fp);
-  *status = SDL_IO_STATUS_READY;
-  return res == 0;
-}
-
-static Sint64 stdio_fseek(
-  void *userdata, 
-  Sint64 offset, 
-  SDL_IOWhence whence) {
-  Sint64 res;
-  FILE* fp = (FILE*)userdata;
-  res = (Sint64)fseek(fp, (long)offset, (int)whence);
-  return res;
-}
-
-static bool stdio_fclose(void* userdata) {
-  int res;
-  FILE* fp = (FILE*)userdata;
-  res = fclose(fp);
-  return res == 0;
-}
-
-static Sint64 stdio_fsize(void* userdata) {
-  (void)userdata;
-  return 0;
-}
-
-static SDL_IOStream* iostreamfromstdio(FILE* fp) {
-  SDL_IOStream* io;
-  SDL_IOStreamInterface iosi;
-  SDL_INIT_INTERFACE(&iosi);
-  iosi.close = stdio_fclose;
-  iosi.flush = stdio_flush;
-  iosi.read = stdio_fread;
-  iosi.write = stdio_fwrite;
-  iosi.seek = stdio_fseek;
-  iosi.size = stdio_fsize;
-  
-  io = SDL_OpenIO(&iosi, fp);
-  if (io == NULL)
-    return NULL;
-  return io;
-}
-
-SDL_IOStream* lgame_checkfile(lua_State* L, int fi, const char *mode) {
+SDL_IOStream* lgame_checkreadfile(lua_State* L, int fi) {
   SDL_IOStream* io = NULL;
   fi = lua_absindex(L, fi);
   if (lua_type(L, fi) == LUA_TSTRING) {
     const char* filename;
     filename = lua_tostring(L, fi);
-    io = SDL_IOFromFile(filename, mode);
+    io = SDL_IOFromFile(filename, "rb");
   }
   else if (lua_type(L, fi) == LUA_TUSERDATA) {
     luaL_Stream* stream;
+    const char* bytes;
+    size_t szbytes;
     stream = (luaL_Stream*)luaL_checkudata(L, fi, LUA_FILEHANDLE);
     if (stream->closef == NULL)
       luaL_error(L, "file is closed");
     if (stream->f == NULL)
       luaL_error(L, "incompletely created file");
-    io = iostreamfromstdio(stream->f);
+    lua_getfield(L, fi, "read");
+    lua_pushvalue(L, fi);
+    lua_pushstring(L, "a");
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK)
+      luaL_error(L, lua_tostring(L, -1));
+    bytes = luaL_checklstring(L, -1, &szbytes); lua_pop(L, 1);
+    io = SDL_IOFromConstMem(bytes, szbytes);
   }
   else {
     luaL_error(L, "expected file like argument (string or FILE*)");
@@ -109,6 +41,67 @@ SDL_IOStream* lgame_checkfile(lua_State* L, int fi, const char *mode) {
   return io;
 }
 
-bool lgame_closefile(SDL_IOStream* io) {
-  return SDL_CloseIO(io);
+bool lgame_closereadfile(lua_State *L, SDL_IOStream *io, int err) {
+  bool res = SDL_CloseIO(io);
+  if (!res && err)
+    return luaL_error(L, SDL_GetError());
+  return res;
+}
+
+SDL_IOStream* lgame_checkwritefile(lua_State* L, int fi, int *dyn) {
+  SDL_IOStream* io = NULL;
+  fi = lua_absindex(L, fi);
+  if (dyn) *dyn = 0;
+  if (lua_type(L, fi) == LUA_TSTRING) {
+    const char* filename;
+    filename = lua_tostring(L, fi);
+    io = SDL_IOFromFile(filename, "wb");
+  }
+  else if (lua_type(L, fi) == LUA_TUSERDATA) {
+    io = SDL_IOFromDynamicMem();
+    if (dyn) *dyn = 1;
+  }
+  else {
+    luaL_error(L, "expected file like argument (string or FILE*)");
+  }
+  if (io == NULL)
+    luaL_error(L, SDL_GetError());
+  return io;
+}
+
+bool lgame_closewritefile(lua_State *L, SDL_IOStream* io, int fi, int dyn, int err) {
+  if (dyn) {
+    SDL_PropertiesID prop;
+    void* mem;
+    size_t memsz;
+    fi = lua_absindex(L, fi);
+    prop = SDL_GetIOProperties(io);
+    if (prop == 0) {
+      SDL_CloseIO(io);
+      if (err) luaL_error(L, SDL_GetError());
+      return false;
+    }
+    mem = SDL_GetPointerProperty(prop, SDL_PROP_IOSTREAM_DYNAMIC_MEMORY_POINTER, NULL);
+    if (mem == NULL) {
+      SDL_CloseIO(io);
+      if (err) luaL_error(L, SDL_GetError());
+      return false;
+    }
+    memsz = SDL_GetIOSize(io);
+    if (memsz < 0) {
+      SDL_CloseIO(io);
+      if (err) luaL_error(L, SDL_GetError());
+      return false;
+    }
+    lua_getfield(L, fi, "write");
+    lua_pushvalue(L, fi);
+    lua_pushlstring(L, (const char*)mem, memsz);
+    if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+      SDL_CloseIO(io);
+      luaL_error(L, lua_tostring(L, -1));
+    }
+    lua_pop(L, 1);
+  }
+  SDL_CloseIO(io);
+  return true;
 }

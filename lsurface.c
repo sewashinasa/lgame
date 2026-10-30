@@ -1,4 +1,6 @@
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <lua/lua.h>
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
@@ -9,10 +11,14 @@
 #include "lcolor.h"
 #include "lconsts.h"
 #include "lmethod.h"
+#include "lcheckfile.h"
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 
+#define NAMEHINT_SIZE 16
+#define NAMEHINT_PNG "PNG"
+#define NAMEHINT_BMP "BMP"
 
 static int Surface_new(lua_State* L);
 static int Surface_blit(lua_State* L);
@@ -30,7 +36,12 @@ static int Surface__index(lua_State* L);
 static int Surface__tostring(lua_State* L);
 static int Surface__gc(lua_State* L);
 
+static int surface_load(lua_State* L);
+static int surface_save(lua_State* L);
+
 const struct luaL_Reg lgame_surface_module[] = {
+  {"load", surface_load},
+  {"save", surface_save},
   {"Surface", Surface_new},
   {NULL, NULL}
 };
@@ -162,6 +173,75 @@ static void cliprect(const SDL_Rect* src, const SDL_Rect* dst, SDL_Rect* res) {
     res->w = w;
     res->h = h;
   }
+}
+
+static void process_namehint(const char* s, char* buf) {
+  int skip = 0;
+  for (int i = (int)strlen(s) - 1; i >= 0; i--)
+    if (s[i] == '.')
+      skip = i;
+  strncpy(buf, s+skip, NAMEHINT_SIZE);
+  for (int i = 0; i < (int)strlen(buf); i++)
+    buf[i] = SDL_toupper(buf[i]);
+}
+
+static int surface_load(lua_State* L) {
+  SDL_IOStream* io = lgame_checkreadfile(L, 1);
+  const char* namehint = luaL_optstring(L, 2, NULL);
+  SDL_Surface* surface = NULL;
+  lgame_Surface* lsurface = NULL;
+  if (namehint) {
+    char buf[NAMEHINT_SIZE];
+    process_namehint(namehint, buf);
+    if (!strcmp(buf, NAMEHINT_BMP))
+      surface = SDL_LoadBMP_IO(io, false);
+    else if (!strcmp(buf, NAMEHINT_PNG))
+      surface = SDL_LoadPNG_IO(io, false);
+    else {
+      lgame_closereadfile(L, io, 0);
+      return luaL_error(L, "invalid namehint argument");
+    }
+  }
+  else {
+    surface = SDL_LoadSurface_IO(io, false);
+  }
+  if (!surface) {
+    lgame_closereadfile(L, io, 0);
+    return luaL_error(L, SDL_GetError());
+  }
+  lgame_closereadfile(L, io, 1);
+  lsurface = lgame_pushsurface(L);
+  lsurface->surf = surface;
+  return 1;
+}
+
+static int surface_save(lua_State* L) {
+  int dyn;
+  lgame_Surface* surface = lgame_checksurface(L, 1);
+  SDL_IOStream* io = lgame_checkwritefile(L, 2, &dyn);
+  const char* namehint = luaL_optstring(L, 3, NULL);
+  bool res;
+  if (namehint) {
+    char buf[NAMEHINT_SIZE];
+    process_namehint(namehint, buf);
+    if (!strcmp(buf, NAMEHINT_BMP))
+      res = SDL_SaveBMP_IO(surface->surf, io, false);
+    else if (!strcmp(buf, NAMEHINT_PNG))
+      res = SDL_SavePNG_IO(surface->surf, io, false);
+    else {
+      lgame_closewritefile(L, io, 2, dyn, 0);
+      return luaL_error(L, "invalid namehint argument");
+    }
+  }
+  else {
+    res = SDL_SaveBMP_IO(surface->surf, io, false);
+  }
+  if (!res) {
+    lgame_closewritefile(L, io, 2, dyn, 0);
+    return luaL_error(L, SDL_GetError());
+  }
+  lgame_closewritefile(L, io, 2, dyn, 1);
+  return 0;
 }
 
 static int Surface_new(lua_State* L) {
