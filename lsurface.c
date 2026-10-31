@@ -25,6 +25,8 @@ static int Surface_blit(lua_State* L);
 static int Surface_fill(lua_State* L);
 static int Surface_convert(lua_State* L);
 static int Surface_convert_alpha(lua_State* L);
+static int Surface_get_at(lua_State* L);
+static int Surface_set_at(lua_State* L);
 static int Surface_get_size(lua_State* L);
 static int Surface_get_width(lua_State* L);
 static int Surface_get_height(lua_State* L);
@@ -51,6 +53,8 @@ const struct luaL_Reg lgame_Surface_methods[] = {
   {"fill", Surface_fill},
   {"convert", Surface_convert},
   {"convert_alpha", Surface_convert_alpha},
+  {"get_at", Surface_get_at},
+  {"set_at", Surface_set_at},
   {"get_size", Surface_get_size},
   {"get_width", Surface_get_width},
   {"get_height", Surface_get_height},
@@ -481,6 +485,134 @@ static int Surface_convert_alpha(lua_State* L) {
   if (!conv->surf)
     return luaL_error(L, SDL_GetError());
   return 1;
+}
+
+static int Surface_get_at(lua_State* L) {
+  lgame_Surface* self;
+  SDL_Surface* surface;
+  const SDL_PixelFormatDetails* pfd;
+  SDL_Palette* pal;
+  lgame_Color* color;
+  int px, py;
+  int sw, sh;
+  int bpp;
+  int pitch;
+  void* pixels;
+  Uint8* pixel;
+  Uint8 rgba[4] = { 0 };
+  self = lgame_checksurface(L, 1);
+  lgame_checkpoint2intfromargs1(L, &px, &py);
+  surface = self->surf;
+  sw = surface->w;
+  sh = surface->h;
+  if ((px < 0 || px >= sw) || (py < 0 || py >= sh))
+    return luaL_error(L, "pixel position out of surface area");
+  pfd = SDL_GetPixelFormatDetails(surface->format);
+  if (SDL_MUSTLOCK(surface))
+    if (!SDL_LockSurface(surface))
+      return luaL_error(L, SDL_GetError());
+  bpp = SDL_BYTESPERPIXEL(surface->format);
+  pitch = surface->pitch;
+  pixels = surface->pixels;
+  pixel = (Uint8*)pixels + (py * pitch) + (px * bpp);
+  switch (bpp) {
+  case (1):
+    pal = SDL_GetSurfacePalette(surface);
+    SDL_GetRGBA(*pixel, pfd, pal, &rgba[0], &rgba[1], &rgba[2], &rgba[3]);
+    break;
+  case (2):
+    SDL_GetRGBA(*(Uint16*)pixel, pfd, NULL, &rgba[0], &rgba[1], &rgba[2], &rgba[3]);
+    break;
+  case (3):
+    if (pfd->Rmask == 0xFF0000) {
+      rgba[0] = pixel[0];
+      rgba[1] = pixel[1];
+      rgba[2] = pixel[2];
+    }
+    else {
+      rgba[0] = pixel[2];
+      rgba[1] = pixel[1];
+      rgba[2] = pixel[0];
+    }
+    rgba[3] = 255;
+    break;
+  case (4):
+    SDL_GetRGBA(*(Uint32*)pixel, pfd, NULL, &rgba[0], &rgba[1], &rgba[2], &rgba[3]);
+    break;
+  default:
+    if (SDL_MUSTLOCK(surface))
+      SDL_UnlockSurface(surface);
+    return luaL_error(L, "unknown pixel format");
+  }
+  if (SDL_MUSTLOCK(surface))
+    SDL_UnlockSurface(surface);
+  color = lgame_pushcolor(L);
+  color->r = rgba[0];
+  color->g = rgba[1];
+  color->b = rgba[2];
+  color->a = rgba[3];
+  return 1;
+}
+
+static int Surface_set_at(lua_State* L) {
+  lgame_Surface* self;
+  SDL_Surface* surface;
+  const SDL_PixelFormatDetails* pfd;
+  SDL_Palette* pal;
+  lgame_Color color;
+  int px, py;
+  int sw, sh;
+  int bpp;
+  int pitch;
+  void* pixels;
+  Uint8* pixel;
+  self = lgame_checksurface(L, 1);
+  lgame_checkpoint2int(L, 2, &px, &py);
+  color = lgame_checkcolorarg(L, 3);
+  surface = self->surf;
+  sw = surface->w;
+  sh = surface->h;
+  if ((px < 0 || px >= sw) || (py < 0 || py >= sh))
+    return luaL_error(L, "pixel position out of surface area");
+  pfd = SDL_GetPixelFormatDetails(surface->format);
+  if (SDL_MUSTLOCK(surface))
+    if (!SDL_LockSurface(surface))
+      return luaL_error(L, SDL_GetError());
+  bpp = SDL_BYTESPERPIXEL(surface->format);
+  pitch = surface->pitch;
+  pixels = surface->pixels;
+  pixel = (Uint8*)pixels + (py * pitch) + (px * bpp);
+  switch (bpp) {
+  case (1):
+    pal = SDL_GetSurfacePalette(surface);
+    *pixel = (Uint8)SDL_MapRGB(pfd, pal, color.r, color.g, color.b);
+    break;
+  case (2):
+    *(Uint16*)pixel = (Uint16)SDL_MapRGBA(pfd, NULL, color.r, color.g, color.b, color.a);
+    break;
+  case (3):
+    if (pfd->Rmask == 0xFF0000) {
+      pixel[0] = color.r;
+      pixel[1] = color.g;
+      pixel[2] = color.b;
+    }
+    else {
+      pixel[0] = color.b;
+      pixel[1] = color.g;
+      pixel[2] = color.r;
+    }
+    break;
+  case (4):
+    *(Uint32*)pixel = (Uint32)SDL_MapRGBA(pfd, NULL, color.r, color.g, color.b, color.a);
+    break;
+  default:
+    if (SDL_MUSTLOCK(surface))
+      SDL_UnlockSurface(surface);
+    return luaL_error(L, "unknown pixel format");
+  }
+  if (SDL_MUSTLOCK(surface))
+    SDL_UnlockSurface(surface);
+  return 0;
 }
 
 static int Surface_get_flags(lua_State* L) {
