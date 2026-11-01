@@ -10,10 +10,14 @@
 
 #define LGAME_SURFACE_METATABLE "lgame.Surface"
 
-typedef struct lgame_Surface {
+typedef struct lgame_Surface lgame_Surface;
+struct lgame_Surface {
   SDL_Surface* surf;
   int isws;
-} lgame_Surface;
+  lgame_Surface* parent;
+  int parent_ref;
+  int xo, yo;
+};
 
 extern const struct luaL_Reg lgame_surface_module[];
 extern const struct luaL_Reg lgame_Surface_methods[];

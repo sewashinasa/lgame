@@ -27,6 +27,11 @@ static int Surface_convert(lua_State* L);
 static int Surface_convert_alpha(lua_State* L);
 static int Surface_get_at(lua_State* L);
 static int Surface_set_at(lua_State* L);
+static int Surface_subsurface(lua_State* L);
+static int Surface_get_parent(lua_State* L);
+static int Surface_get_abs_parent(lua_State* L);
+static int Surface_get_offset(lua_State* L);
+static int Surface_get_abs_offset(lua_State* L);
 static int Surface_get_size(lua_State* L);
 static int Surface_get_width(lua_State* L);
 static int Surface_get_height(lua_State* L);
@@ -55,6 +60,11 @@ const struct luaL_Reg lgame_Surface_methods[] = {
   {"convert_alpha", Surface_convert_alpha},
   {"get_at", Surface_get_at},
   {"set_at", Surface_set_at},
+  {"subsurface", Surface_subsurface},
+  {"get_parent", Surface_get_parent},
+  {"get_abs_parent", Surface_get_abs_parent},
+  {"get_offset", Surface_get_offset},
+  {"get_abs_offset", Surface_get_abs_offset},
   {"get_size", Surface_get_size},
   {"get_width", Surface_get_width},
   {"get_height", Surface_get_height},
@@ -78,6 +88,10 @@ lgame_Surface* lgame_pushsurface(lua_State* L) {
   s = (lgame_Surface*)lua_newuserdata(L, sizeof(lgame_Surface));
   s->surf = NULL;
   s->isws = 0;
+  s->parent = NULL;
+  s->parent_ref = LUA_NOREF;
+  s->xo = 0;
+  s->yo = 0;
   luaL_getmetatable(L, LGAME_SURFACE_METATABLE);
   lua_setmetatable(L, -2);
   return s;
@@ -615,6 +629,96 @@ static int Surface_set_at(lua_State* L) {
   return 0;
 }
 
+static int Surface_subsurface(lua_State* L) {
+  lgame_Surface* self;
+  lgame_Surface* subsurf;
+  lgame_Rect area;
+  int subsurf_w, subsurf_h;
+  int subsurf_xo, subsurf_yo;
+  SDL_PixelFormat subsurf_format;
+  void* subsurf_pixels;
+  int subsurf_pitch;
+  self = lgame_checksurface(L, 1);
+  area = lgame_checkrectfromargs1(L);
+  subsurf_w = area.w;
+  subsurf_h = area.h;
+  subsurf_xo = area.x;
+  subsurf_yo = area.y;
+  if (!(subsurf_xo >= 0 &&
+    subsurf_yo >= 0 &&
+    subsurf_xo + subsurf_w <= self->surf->w &&
+    subsurf_yo + subsurf_h <= self->surf->h))
+    return luaL_error(L, "subsurface area out of parent surface area");
+  subsurf_format = self->surf->format;
+  subsurf_pixels = self->surf->pixels;
+  subsurf_pitch = self->surf->pitch;
+  subsurf = lgame_pushsurface(L);
+  subsurf->surf = SDL_CreateSurfaceFrom(subsurf_w, subsurf_h, subsurf_format, subsurf_pixels, subsurf_pitch);
+  if (subsurf->surf == NULL)
+    return luaL_error(L, SDL_GetError());
+  lua_pushvalue(L, 1);
+  subsurf->parent_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+  subsurf->parent = self;
+  subsurf->xo = subsurf_xo;
+  subsurf->yo = subsurf_yo;
+  return 1;
+}
+
+static int Surface_get_parent(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  if (self->parent_ref != LUA_NOREF)
+    lua_rawgeti(L, LUA_REGISTRYINDEX, self->parent_ref);
+  else
+    lua_pushnil(L);
+  return 1;
+}
+
+static int Surface_get_abs_parent(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lgame_Surface* next = self;
+
+  if (!next->parent) {
+    lua_pushvalue(L, 1);
+    return 1;
+  }
+
+  while (1) {
+    if (next->parent && !next->parent->parent) {
+      break;
+    }
+    next = next->parent;
+  }
+  lua_rawgeti(L, LUA_REGISTRYINDEX, next->parent_ref);
+  return 1;
+}
+
+static int Surface_get_offset(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lua_createtable(L, 2, 0);
+  lua_pushinteger(L, self->xo);
+  lua_rawseti(L, -2, 1);
+  lua_pushinteger(L, self->yo);
+  lua_rawseti(L, -2, 2);
+  return 1;
+}
+
+static int Surface_get_abs_offset(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lgame_Surface* next = self;
+  int xo = 0, yo = 0;
+  while (next->parent) {
+    xo += next->xo;
+    yo += next->yo;
+    next = next->parent;
+  }
+  lua_createtable(L, 2, 0);
+  lua_pushinteger(L, xo);
+  lua_rawseti(L, -2, 1);
+  lua_pushinteger(L, yo);
+  lua_rawseti(L, -2, 2);
+  return 1;
+}
+
 static int Surface_get_flags(lua_State* L) {
   lgame_Surface* self = lgame_checksurface(L, 1);
   Uint32 flags = 0;
@@ -699,9 +803,14 @@ static int Surface__tostring(lua_State* L) {
 
 static int Surface__gc(lua_State* L) {
   lgame_Surface* self = lgame_testsurface(L, 1);
+  if (self->parent_ref != LUA_NOREF) {
+    luaL_unref(L, LUA_REGISTRYINDEX, self->parent_ref);
+    self->parent_ref = LUA_NOREF;
+  }
   if (self->surf && !self->isws) {
     SDL_DestroySurface(self->surf);
     self->surf = NULL;
   }
+  self->parent = NULL;
   return 0;
 }
