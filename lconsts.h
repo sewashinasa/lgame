@@ -2,9 +2,14 @@
 #ifndef LCONSTS_H_
 #define LCONSTS_H_
 
+#include <lua/lua.h>
+#include <lua/lualib.h>
+#include <lua/lauxlib.h>
+
+/* surface */
 #define LGAME_SRCALPHA 0x00000001
 
-
+/* events */
 #define LGAME_NOEVENT 0x000
 
 #define LGAME_QUIT 0x100
@@ -16,5 +21,317 @@
 #define LGAME_MOUSEBUTTONDOWN 0x401
 #define LGAME_MOUSEBUTTONUP   0x402
 #define LGAME_MOUSEWHEEL      0x403
+
+/* keys */
+#define LGAME_K_BACKSPACE       0x00000008u
+#define LGAME_K_TAB             0x00000009u
+#define LGAME_K_CLEAR           0x4000009cu
+#define LGAME_K_RETURN          0x0000000du
+#define LGAME_K_PAUSE           0x40000048u
+#define LGAME_K_ESCAPE          0x0000001bu
+#define LGAME_K_SPACE           0x00000020u
+#define LGAME_K_EXCLAIM         0x00000021u
+#define LGAME_K_QUOTEDBL        0x00000022u
+#define LGAME_K_HASH            0x00000023u
+#define LGAME_K_DOLLAR          0x00000024u
+#define LGAME_K_AMPERSAND       0x00000026u
+#define LGAME_K_QUOTE           0x00000027u
+#define LGAME_K_LEFTPAREN       0x00000028u
+#define LGAME_K_RIGHTPAREN      0x00000029u
+#define LGAME_K_ASTERISK        0x0000002au
+#define LGAME_K_PLUS            0x0000002bu
+#define LGAME_K_COMMA           0x0000002cu
+#define LGAME_K_MINUS           0x0000002du
+#define LGAME_K_PERIOD          0x0000002eu
+#define LGAME_K_SLASH           0x0000002fu
+#define LGAME_K_0               0x00000030u
+#define LGAME_K_1               0x00000031u
+#define LGAME_K_2               0x00000032u
+#define LGAME_K_3               0x00000033u
+#define LGAME_K_4               0x00000034u
+#define LGAME_K_5               0x00000035u
+#define LGAME_K_6               0x00000036u
+#define LGAME_K_7               0x00000037u
+#define LGAME_K_8               0x00000038u
+#define LGAME_K_9               0x00000039u
+#define LGAME_K_COLON           0x0000003au
+#define LGAME_K_SEMICOLON       0x0000003bu
+#define LGAME_K_LESS            0x0000003cu
+#define LGAME_K_EQUALS          0x0000003du
+#define LGAME_K_GREATER         0x0000003eu
+#define LGAME_K_QUESTION        0x0000003fu
+#define LGAME_K_AT              0x00000040u
+#define LGAME_K_LEFTBRACKET     0x0000005bu
+#define LGAME_K_BACKSLASH       0x0000005cu
+#define LGAME_K_RIGHTBRACKET    0x0000005du
+#define LGAME_K_CARET           0x0000005eu
+#define LGAME_K_UNDERSCORE      0x0000005fu
+#define LGAME_K_BACKQUOTE       0x00000060u
+#define LGAME_K_a               0x00000061u
+#define LGAME_K_b               0x00000062u
+#define LGAME_K_c               0x00000063u
+#define LGAME_K_d               0x00000064u
+#define LGAME_K_e               0x00000065u
+#define LGAME_K_f               0x00000066u
+#define LGAME_K_g               0x00000067u
+#define LGAME_K_h               0x00000068u
+#define LGAME_K_i               0x00000069u
+#define LGAME_K_j               0x0000006au
+#define LGAME_K_k               0x0000006bu
+#define LGAME_K_l               0x0000006cu
+#define LGAME_K_m               0x0000006du
+#define LGAME_K_n               0x0000006eu
+#define LGAME_K_o               0x0000006fu
+#define LGAME_K_p               0x00000070u
+#define LGAME_K_q               0x00000071u
+#define LGAME_K_r               0x00000072u
+#define LGAME_K_s               0x00000073u
+#define LGAME_K_t               0x00000074u
+#define LGAME_K_u               0x00000075u
+#define LGAME_K_v               0x00000076u
+#define LGAME_K_w               0x00000077u
+#define LGAME_K_x               0x00000078u
+#define LGAME_K_y               0x00000079u
+#define LGAME_K_z               0x0000007au
+#define LGAME_K_DELETE          0x0000007fu
+#define LGAME_K_KP0             0x400000b0u
+#define LGAME_K_KP1             0x400000a1u
+#define LGAME_K_KP2             0x400000a2u
+#define LGAME_K_KP3             0x400000a3u
+#define LGAME_K_KP4             0x400000a4u
+#define LGAME_K_KP5             0x400000a5u
+#define LGAME_K_KP6             0x400000a6u
+#define LGAME_K_KP7             0x400000a7u
+#define LGAME_K_KP8             0x400000a8u
+#define LGAME_K_KP9             0x400000a9u
+#define LGAME_K_KP_PERIOD       0x400000abu
+#define LGAME_K_KP_DIVIDE       0x400000abu
+#define LGAME_K_KP_MULTIPLY     0x4000009bu
+#define LGAME_K_KP_MINUS        0x4000009au
+#define LGAME_K_KP_PLUS         0x40000099u
+#define LGAME_K_KP_ENTER        0x40000058u
+#define LGAME_K_KP_EQUALS       0x400000b3u
+#define LGAME_K_UP              0x40000052u
+#define LGAME_K_DOWN            0x40000051u
+#define LGAME_K_RIGHT           0x4000004fu
+#define LGAME_K_LEFT            0x40000050u
+#define LGAME_K_INSERT          0x40000049u
+#define LGAME_K_HOME            0x4000004au
+#define LGAME_K_END             0x4000004du
+#define LGAME_K_PAGEUP          0x4000004bu
+#define LGAME_K_PAGEDOWN        0x4000004eu
+#define LGAME_K_F1              0x4000003au
+#define LGAME_K_F2              0x4000003bu
+#define LGAME_K_F3              0x4000003cu
+#define LGAME_K_F4              0x4000003du
+#define LGAME_K_F5              0x4000003eu
+#define LGAME_K_F6              0x4000003fu
+#define LGAME_K_F7              0x40000040u
+#define LGAME_K_F8              0x40000041u
+#define LGAME_K_F9              0x40000042u
+#define LGAME_K_F10             0x40000043u
+#define LGAME_K_F11             0x40000044u
+#define LGAME_K_F12             0x40000045u
+#define LGAME_K_F13             0x40000068u
+#define LGAME_K_F14             0x40000069u
+#define LGAME_K_F15             0x4000006au
+#define LGAME_K_NUMLOCK         0x4000005bu
+#define LGAME_K_CAPSLOCK        0x40000039u
+#define LGAME_K_SCROLLOCK       0x40000047u
+#define LGAME_K_RSHIFT          0x400000e5u
+#define LGAME_K_LSHIFT          0x400000e1u
+#define LGAME_K_RCTRL           0x400000e4u
+#define LGAME_K_LCTRL           0x400000e0u
+#define LGAME_K_RALT            0x400000e6u
+#define LGAME_K_LALT            0x400000e2u
+#define LGAME_K_RMETA           0x400000e7u
+#define LGAME_K_LMETA           0x400000e3u
+#define LGAME_K_LSUPER          0x400000e3u
+#define LGAME_K_RSUPER          0x400000e7u
+#define LGAME_K_MODE            0x40000101u
+#define LGAME_K_HELP            0x40000075u
+#define LGAME_K_PRINT           0x40000046u
+#define LGAME_K_SYSREQ          0x40000093u
+#define LGAME_K_BREAK           0x40000096u
+#define LGAME_K_MENU            0x4000007fu
+#define LGAME_K_POWER           0x40000066u
+#define LGAME_K_EURO            0x400000b4u
+#define LGAME_K_AC_BACK         0x40000208u
+
+/* keymods */
+#define LGAME_KMOD_NONE     0x0000u
+#define LGAME_KMOD_LSHIFT   0x0001u
+#define LGAME_KMOD_RSHIFT   0x0002u
+#define LGAME_KMOD_SHIFT    0x0003u
+#define LGAME_KMOD_LCTRL    0x0040u
+#define LGAME_KMOD_RCTRL    0x0080u
+#define LGAME_KMOD_CTRL     0x00c0u
+#define LGAME_KMOD_LALT     0x0100u
+#define LGAME_KMOD_RALT     0x0200u
+#define LGAME_KMOD_ALT      0x0300u
+#define LGAME_KMOD_LMETA    0x0400u
+#define LGAME_KMOD_RMETA    0x0800u
+#define LGAME_KMOD_META     0x0c00u
+#define LGAME_KMOD_CAPS     0x2000u
+#define LGAME_KMOD_NUM      0x1000u
+#define LGAME_KMOD_MODE     0x4000u
+
+/*==================================================================================================================*/
+
+#define LGAME_DEFINECONST(L, constname) \
+  lua_pushinteger((L), LGAME_##constname); \
+  lua_setfield((L), -2, #constname);
+
+#define LGAMECONSTS_DEFINESURFACE(L) \
+  LGAME_DEFINECONST(L, SRCALPHA);
+  
+#define LGAMECONSTS_DEFINEEVENTS(L) \
+  LGAME_DEFINECONST(L, NOEVENT); \
+  LGAME_DEFINECONST(L, QUIT); \
+  LGAME_DEFINECONST(L, KEYDOWN); \
+  LGAME_DEFINECONST(L, KEYUP); \
+  LGAME_DEFINECONST(L, MOUSEMOTION); \
+  LGAME_DEFINECONST(L, MOUSEBUTTONDOWN); \
+  LGAME_DEFINECONST(L, MOUSEBUTTONUP); \
+  LGAME_DEFINECONST(L, MOUSEWHEEL);
+  
+#define LGAMECONSTS_DEFINEKEYS(L) \
+  LGAME_DEFINECONST(L, K_BACKSPACE); \
+  LGAME_DEFINECONST(L, K_TAB); \
+  LGAME_DEFINECONST(L, K_CLEAR); \
+  LGAME_DEFINECONST(L, K_RETURN); \
+  LGAME_DEFINECONST(L, K_PAUSE); \
+  LGAME_DEFINECONST(L, K_ESCAPE); \
+  LGAME_DEFINECONST(L, K_SPACE); \
+  LGAME_DEFINECONST(L, K_EXCLAIM); \
+  LGAME_DEFINECONST(L, K_QUOTEDBL); \
+  LGAME_DEFINECONST(L, K_HASH); \
+  LGAME_DEFINECONST(L, K_DOLLAR); \
+  LGAME_DEFINECONST(L, K_AMPERSAND); \
+  LGAME_DEFINECONST(L, K_QUOTE); \
+  LGAME_DEFINECONST(L, K_LEFTPAREN); \
+  LGAME_DEFINECONST(L, K_RIGHTPAREN); \
+  LGAME_DEFINECONST(L, K_ASTERISK); \
+  LGAME_DEFINECONST(L, K_PLUS); \
+  LGAME_DEFINECONST(L, K_COMMA); \
+  LGAME_DEFINECONST(L, K_MINUS); \
+  LGAME_DEFINECONST(L, K_PERIOD); \
+  LGAME_DEFINECONST(L, K_SLASH); \
+  LGAME_DEFINECONST(L, K_0); \
+  LGAME_DEFINECONST(L, K_1); \
+  LGAME_DEFINECONST(L, K_2); \
+  LGAME_DEFINECONST(L, K_3); \
+  LGAME_DEFINECONST(L, K_4); \
+  LGAME_DEFINECONST(L, K_5); \
+  LGAME_DEFINECONST(L, K_6); \
+  LGAME_DEFINECONST(L, K_7); \
+  LGAME_DEFINECONST(L, K_8); \
+  LGAME_DEFINECONST(L, K_9); \
+  LGAME_DEFINECONST(L, K_COLON); \
+  LGAME_DEFINECONST(L, K_SEMICOLON); \
+  LGAME_DEFINECONST(L, K_LESS); \
+  LGAME_DEFINECONST(L, K_EQUALS); \
+  LGAME_DEFINECONST(L, K_GREATER); \
+  LGAME_DEFINECONST(L, K_QUESTION); \
+  LGAME_DEFINECONST(L, K_AT); \
+  LGAME_DEFINECONST(L, K_LEFTBRACKET); \
+  LGAME_DEFINECONST(L, K_BACKSLASH); \
+  LGAME_DEFINECONST(L, K_RIGHTBRACKET); \
+  LGAME_DEFINECONST(L, K_CARET); \
+  LGAME_DEFINECONST(L, K_UNDERSCORE); \
+  LGAME_DEFINECONST(L, K_BACKQUOTE); \
+  LGAME_DEFINECONST(L, K_a); \
+  LGAME_DEFINECONST(L, K_b); \
+  LGAME_DEFINECONST(L, K_c); \
+  LGAME_DEFINECONST(L, K_d); \
+  LGAME_DEFINECONST(L, K_e); \
+  LGAME_DEFINECONST(L, K_f); \
+  LGAME_DEFINECONST(L, K_g); \
+  LGAME_DEFINECONST(L, K_h); \
+  LGAME_DEFINECONST(L, K_i); \
+  LGAME_DEFINECONST(L, K_j); \
+  LGAME_DEFINECONST(L, K_k); \
+  LGAME_DEFINECONST(L, K_l); \
+  LGAME_DEFINECONST(L, K_m); \
+  LGAME_DEFINECONST(L, K_n); \
+  LGAME_DEFINECONST(L, K_o); \
+  LGAME_DEFINECONST(L, K_p); \
+  LGAME_DEFINECONST(L, K_q); \
+  LGAME_DEFINECONST(L, K_r); \
+  LGAME_DEFINECONST(L, K_s); \
+  LGAME_DEFINECONST(L, K_t); \
+  LGAME_DEFINECONST(L, K_u); \
+  LGAME_DEFINECONST(L, K_v); \
+  LGAME_DEFINECONST(L, K_w); \
+  LGAME_DEFINECONST(L, K_x); \
+  LGAME_DEFINECONST(L, K_y); \
+  LGAME_DEFINECONST(L, K_z); \
+  LGAME_DEFINECONST(L, K_DELETE); \
+  LGAME_DEFINECONST(L, K_KP0); \
+  LGAME_DEFINECONST(L, K_KP1); \
+  LGAME_DEFINECONST(L, K_KP2); \
+  LGAME_DEFINECONST(L, K_KP3); \
+  LGAME_DEFINECONST(L, K_KP4); \
+  LGAME_DEFINECONST(L, K_KP5); \
+  LGAME_DEFINECONST(L, K_KP6); \
+  LGAME_DEFINECONST(L, K_KP7); \
+  LGAME_DEFINECONST(L, K_KP8); \
+  LGAME_DEFINECONST(L, K_KP9); \
+  LGAME_DEFINECONST(L, K_KP_PERIOD); \
+  LGAME_DEFINECONST(L, K_KP_DIVIDE); \
+  LGAME_DEFINECONST(L, K_KP_MULTIPLY); \
+  LGAME_DEFINECONST(L, K_KP_MINUS); \
+  LGAME_DEFINECONST(L, K_KP_PLUS); \
+  LGAME_DEFINECONST(L, K_KP_ENTER); \
+  LGAME_DEFINECONST(L, K_KP_EQUALS); \
+  LGAME_DEFINECONST(L, K_UP); \
+  LGAME_DEFINECONST(L, K_DOWN); \
+  LGAME_DEFINECONST(L, K_RIGHT); \
+  LGAME_DEFINECONST(L, K_LEFT); \
+  LGAME_DEFINECONST(L, K_INSERT); \
+  LGAME_DEFINECONST(L, K_HOME); \
+  LGAME_DEFINECONST(L, K_END); \
+  LGAME_DEFINECONST(L, K_PAGEUP); \
+  LGAME_DEFINECONST(L, K_PAGEDOWN); \
+  LGAME_DEFINECONST(L, K_F1); \
+  LGAME_DEFINECONST(L, K_F2); \
+  LGAME_DEFINECONST(L, K_F3); \
+  LGAME_DEFINECONST(L, K_F4); \
+  LGAME_DEFINECONST(L, K_F5); \
+  LGAME_DEFINECONST(L, K_F6); \
+  LGAME_DEFINECONST(L, K_F7); \
+  LGAME_DEFINECONST(L, K_F8); \
+  LGAME_DEFINECONST(L, K_F9); \
+  LGAME_DEFINECONST(L, K_F10); \
+  LGAME_DEFINECONST(L, K_F11); \
+  LGAME_DEFINECONST(L, K_F12); \
+  LGAME_DEFINECONST(L, K_F13); \
+  LGAME_DEFINECONST(L, K_F14); \
+  LGAME_DEFINECONST(L, K_F15); \
+  LGAME_DEFINECONST(L, K_NUMLOCK); \
+  LGAME_DEFINECONST(L, K_CAPSLOCK); \
+  LGAME_DEFINECONST(L, K_SCROLLOCK); \
+  LGAME_DEFINECONST(L, K_RSHIFT); \
+  LGAME_DEFINECONST(L, K_LSHIFT); \
+  LGAME_DEFINECONST(L, K_RCTRL); \
+  LGAME_DEFINECONST(L, K_LCTRL); \
+
+#define LGAMECONSTS_DEFINEMODS(L) \
+  LGAME_DEFINECONST(L, KMOD_NONE); \
+  LGAME_DEFINECONST(L, KMOD_LSHIFT); \
+  LGAME_DEFINECONST(L, KMOD_RSHIFT); \
+  LGAME_DEFINECONST(L, KMOD_SHIFT); \
+  LGAME_DEFINECONST(L, KMOD_LCTRL); \
+  LGAME_DEFINECONST(L, KMOD_RCTRL); \
+  LGAME_DEFINECONST(L, KMOD_CTRL); \
+  LGAME_DEFINECONST(L, KMOD_LALT); \
+  LGAME_DEFINECONST(L, KMOD_RALT); \
+  LGAME_DEFINECONST(L, KMOD_ALT); \
+  LGAME_DEFINECONST(L, KMOD_LMETA); \
+  LGAME_DEFINECONST(L, KMOD_RMETA); \
+  LGAME_DEFINECONST(L, KMOD_META); \
+  LGAME_DEFINECONST(L, KMOD_CAPS); \
+  LGAME_DEFINECONST(L, KMOD_NUM); \
+  LGAME_DEFINECONST(L, KMOD_MODE)
 
 #endif

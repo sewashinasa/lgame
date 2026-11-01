@@ -14,10 +14,6 @@
 #include "lconsts.h"
 #include "lmethod.h"
 
-#define PUSHCONST(L,name) \
-  lua_pushinteger((L), LGAME_##name); \
-  lua_setfield((L), -2, #name); \
-
 static void createmetatable(lua_State* L, 
   const char* name, 
   const struct luaL_Reg* methods, 
@@ -86,19 +82,10 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   pushfunction(L, "Color", getfunction(L, "Color", lgame_color_module));
   pushfunction(L, "Surface", getfunction(L, "Surface", lgame_surface_module));
 
-  PUSHCONST(L, SRCALPHA);
-
-  PUSHCONST(L, NOEVENT);
-
-  PUSHCONST(L, QUIT);
-
-  PUSHCONST(L, KEYDOWN);
-  PUSHCONST(L, KEYUP);
-
-  PUSHCONST(L, MOUSEMOTION);
-  PUSHCONST(L, MOUSEBUTTONDOWN);
-  PUSHCONST(L, MOUSEBUTTONUP);
-  PUSHCONST(L, MOUSEWHEEL);
+  LGAMECONSTS_DEFINESURFACE(L);
+  LGAMECONSTS_DEFINEEVENTS(L);
+  LGAMECONSTS_DEFINEKEYS(L);
+  LGAMECONSTS_DEFINEMODS(L);
 
   return 1;
 }
