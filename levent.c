@@ -40,6 +40,8 @@ const struct luaL_Reg lgame_Event_metamethods[] = {
   { NULL, NULL }
 };
 
+static const char* get_event_name(Uint32 type);
+
 void lgame_pushevent(lua_State* L) {
   lua_newuserdata(L, sizeof(void*));
   luaL_getmetatable(L, LGAME_EVENT_METATABLE);
@@ -228,11 +230,13 @@ static int Event__newindex(lua_State* L) {
 
 static int Event__tostring(lua_State* L) {
   Uint32 type;
+  const char* name;
   lgame_checkevent(L, 1);
   lua_getuservalue(L, -1);
   lua_getfield(L, -1, "type");
   type = (Uint32)lua_tointeger(L, -1);
-  lua_pushfstring(L, "<Event(%d)>", type);
+  name = get_event_name(type);
+  lua_pushfstring(L, "<Event(%d-%s)>", type, name);
   return 1;
 }
 
@@ -361,5 +365,31 @@ static int event_peek(lua_State* L) {
   }
   
   lua_pushboolean(L, hasevs);
+  return 1;
+}
+
+static const char* get_event_name(Uint32 type) {
+  switch (type) {
+  case (LGAME_QUIT):
+    return "Quit";
+  case (LGAME_KEYDOWN):
+    return "KeyDown";
+  case (LGAME_KEYUP):
+    return "KeyUp";
+  case (LGAME_MOUSEBUTTONDOWN):
+    return "MouseButtonDown";
+  case (LGAME_MOUSEBUTTONUP):
+    return "MouseButtonUp";
+  case (LGAME_MOUSEMOTION):
+    return "MouseMotion";
+  case (LGAME_MOUSEWHEEL):
+    return "MouseWheel";
+  default:
+    return "Unknown";
+  }
+}
+
+static int event_event_name(lua_State* L) {
+  lua_pushstring(L, get_event_name((Uint32)luaL_checkinteger(L, 1)));
   return 1;
 }
