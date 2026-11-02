@@ -31,6 +31,8 @@ static SDL_Surface* lgame_WindowSurface = NULL;
 static int lgame_display_initialized = 0;
 static int lgame_display_mode_set = 0;
 
+int lgame_validate_window_surface = 0;
+
 SDL_Surface* lgame_get_windowsurface(void) { return lgame_WindowSurface; }
 SDL_Window* lgame_get_window(void) { return lgame_Window; }
 
@@ -107,45 +109,38 @@ static int display_set_mode(lua_State* L) {
 
     lgame_WindowSurface = SDL_GetWindowSurface(lgame_Window);
     if (!lgame_WindowSurface) {
-      SDL_DestroyWindow(lgame_Window);
       return luaL_error(L, SDL_GetError());
     }
 
     if (flags & LGAME_HIDDEN) {
       if (!SDL_HideWindow(lgame_Window)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
     else {
       if (!SDL_ShowWindow(lgame_Window)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
 
     if (flags & LGAME_NOFRAME) {
       if (!SDL_SetWindowBordered(lgame_Window, false)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
     else {
       if (!SDL_SetWindowBordered(lgame_Window, true)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
 
     if (flags & LGAME_RESIZABLE) {
       if (!SDL_SetWindowResizable(lgame_Window, true)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
     else {
       if (!SDL_SetWindowResizable(lgame_Window, false)) {
-        SDL_DestroyWindow(lgame_Window);
         return luaL_error(L, SDL_GetError());
       }
     }
@@ -162,10 +157,8 @@ static int display_set_mode(lua_State* L) {
     return luaL_error(L, SDL_GetError());
 
   lgame_WindowSurface = SDL_GetWindowSurface(lgame_Window);
-  if (!lgame_WindowSurface) {
-    SDL_DestroyWindow(lgame_Window);
+  if (!lgame_WindowSurface)
     return luaL_error(L, SDL_GetError());
-  }
 
   ws = lgame_pushsurface(L);
   ws->surf = lgame_WindowSurface;
@@ -181,6 +174,17 @@ static int display_set_mode(lua_State* L) {
 static int display_flip(lua_State* L) {
   if (!lgame_display_mode_set)
     return luaL_error(L, "window not opened");
+  if (lgame_validate_window_surface) {
+    lgame_Surface* ws;
+    lgame_validate_window_surface = 0;
+    lgame_WindowSurface = SDL_GetWindowSurface(lgame_Window);
+    if (!lgame_WindowSurface)
+      return luaL_error(L, SDL_GetError());
+    lgame_getwindowsurface(L);
+    ws = (lgame_Surface*)lua_touserdata(L, -1);
+    ws->surf = lgame_WindowSurface;
+    lua_pop(L, 1);
+  }
   if (!SDL_UpdateWindowSurface(lgame_Window))
     return luaL_error(L, SDL_GetError());
   return 0;

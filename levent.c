@@ -156,6 +156,99 @@ static void lgame_make_mousewheel_event(lua_State* L, int evobj, SDL_Event* ev) 
   lua_pop(L, 1);
 }
 
+static void lgame_make_video_event(lua_State* L, int evobj, SDL_Event* ev) {
+  evobj = lua_absindex(L, evobj);
+  lua_getuservalue(L, evobj);
+
+  extern int lgame_validate_window_surface;
+
+  if (ev->window.type == SDL_EVENT_WINDOW_MOUSE_ENTER) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 1);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 1);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 1);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 0);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 2);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 1);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 2);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 0);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_RESTORED) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 4);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 1);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_MINIMIZED) {
+    lua_pushinteger(L, LGAME_ACTIVEEVENT);
+    lua_setfield(L, -2, "type");
+
+    lua_pushinteger(L, 4);
+    lua_setfield(L, -2, "state");
+
+    lua_pushinteger(L, 0);
+    lua_setfield(L, -2, "gain");
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_RESIZED) {
+    lua_pushinteger(L, LGAME_VIDEORESIZE);
+    lua_setfield(L, -2, "type");
+
+    lua_createtable(L, 2, 0);
+    lua_pushinteger(L, ev->window.data1);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, ev->window.data2);
+    lua_rawseti(L, -2, 2);
+    lua_setfield(L, -2, "size");
+
+    lua_pushinteger(L, ev->window.data1);
+    lua_setfield(L, -2, "w");
+
+    lua_pushinteger(L, ev->window.data2);
+    lua_setfield(L, -2, "h");
+
+    lgame_validate_window_surface = 1;
+  }
+  else if (ev->window.type == SDL_EVENT_WINDOW_EXPOSED) {
+    lua_pushinteger(L, LGAME_VIDEOEXPOSE);
+    lua_setfield(L, -2, "type");
+  }
+
+  lua_pop(L, 1);
+}
+
 static void lgame_make_event(lua_State* L, int evobj, SDL_Event *ev) {
   evobj = lua_absindex(L, evobj);
   lua_getuservalue(L, evobj);
@@ -177,6 +270,16 @@ static void lgame_make_event(lua_State* L, int evobj, SDL_Event *ev) {
     break;
   case (LGAME_MOUSEWHEEL):
     lgame_make_mousewheel_event(L, evobj, ev);
+    break;
+  case (SDL_EVENT_WINDOW_MOUSE_ENTER):
+  case (SDL_EVENT_WINDOW_MOUSE_LEAVE):
+  case (SDL_EVENT_WINDOW_FOCUS_GAINED):
+  case (SDL_EVENT_WINDOW_FOCUS_LOST):
+  case (SDL_EVENT_WINDOW_RESTORED):
+  case (SDL_EVENT_WINDOW_MINIMIZED):
+  case (SDL_EVENT_WINDOW_RESIZED):
+  case (SDL_EVENT_WINDOW_EXPOSED):
+    lgame_make_video_event(L, evobj, ev);
     break;
   }
 }
@@ -384,6 +487,12 @@ static const char* get_event_name(Uint32 type) {
     return "MouseMotion";
   case (LGAME_MOUSEWHEEL):
     return "MouseWheel";
+  case (LGAME_ACTIVEEVENT):
+    return "ActiveEvent";
+  case (LGAME_VIDEORESIZE):
+    return "VideoResize";
+  case (LGAME_VIDEOEXPOSE):
+    return "VideoExpose";
   default:
     return "Unknown";
   }
