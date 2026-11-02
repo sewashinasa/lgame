@@ -6,6 +6,7 @@
 #include "ldisplay.h"
 #include "lsurface.h"
 #include "lpoint.h"
+#include "lconsts.h"
 
 #define DEFAULT_TITLE "lgame window"
 
@@ -80,7 +81,26 @@ static int display_get_init(lua_State* L) {
 static int display_set_mode(lua_State* L) {
   lgame_Surface* ws;
   int dw, dh;
+  int flags;
+  int depth;
+  int display;
+  int vsync;
   lgame_checkpoint2int(L, 1, &dw, &dh);
+  flags = (int)luaL_optinteger(L, 2, 0);
+  depth = (int)luaL_optinteger(L, 3, 0); (void)depth;
+  display = (int)luaL_optinteger(L, 4, 0);
+  vsync = (int)luaL_optinteger(L, 5, 0); (void)vsync;
+
+  display_init(L);
+
+  if (dw == 0 || dh == 0) {
+    const SDL_DisplayMode* dm;
+    dm = SDL_GetDesktopDisplayMode((SDL_DisplayID)display);
+    if (dm == NULL)
+      return luaL_error(L, SDL_GetError());
+    if (dw == 0) dw = dm->w;
+    if (dh == 0) dh = dm->h;
+  }
 
   if (lgame_display_mode_set) {
     SDL_SetWindowSize(lgame_Window, dw, dh);
@@ -91,6 +111,45 @@ static int display_set_mode(lua_State* L) {
       return luaL_error(L, SDL_GetError());
     }
 
+    if (flags & LGAME_HIDDEN) {
+      if (!SDL_HideWindow(lgame_Window)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+    else {
+      if (!SDL_ShowWindow(lgame_Window)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+
+    if (flags & LGAME_NOFRAME) {
+      if (!SDL_SetWindowBordered(lgame_Window, false)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+    else {
+      if (!SDL_SetWindowBordered(lgame_Window, true)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+
+    if (flags & LGAME_RESIZABLE) {
+      if (!SDL_SetWindowResizable(lgame_Window, true)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+    else {
+      if (!SDL_SetWindowResizable(lgame_Window, false)) {
+        SDL_DestroyWindow(lgame_Window);
+        return luaL_error(L, SDL_GetError());
+      }
+    }
+
     lgame_getwindowsurface(L);
     ws = (lgame_Surface*)lua_touserdata(L, -1);
     ws->surf = lgame_WindowSurface;
@@ -98,7 +157,7 @@ static int display_set_mode(lua_State* L) {
     return 1;
   }
 
-  lgame_Window = SDL_CreateWindow(DEFAULT_TITLE, dw, dh, 0);
+  lgame_Window = SDL_CreateWindow(DEFAULT_TITLE, dw, dh, flags);
   if (!lgame_Window)
     return luaL_error(L, SDL_GetError());
 

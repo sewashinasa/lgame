@@ -86,6 +86,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   LGAMECONSTS_DEFINEEVENTS(L);
   LGAMECONSTS_DEFINEKEYS(L);
   LGAMECONSTS_DEFINEMODS(L);
+  LGAMECONSTS_DEFINEDISPLAY(L);
 
   return 1;
 }
