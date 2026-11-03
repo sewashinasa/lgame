@@ -14,6 +14,7 @@ static int display_init(lua_State* L);
 static int display_quit(lua_State* L);
 static int display_get_init(lua_State* L);
 static int display_set_mode(lua_State* L);
+static int display_get_surface(lua_State* L);
 static int display_flip(lua_State* L);
 
 const struct luaL_Reg lgame_display_module[] = {
@@ -21,6 +22,7 @@ const struct luaL_Reg lgame_display_module[] = {
   {"quit", display_quit},
   {"get_init", display_get_init},
   {"set_mode", display_set_mode},
+  {"get_surface", display_get_surface},
   {"flip", display_flip},
   {NULL, NULL}
 };
@@ -168,6 +170,11 @@ static int display_set_mode(lua_State* L) {
 
   lgame_display_mode_set = 1;
 
+  return 1;
+}
+
+static int display_get_surface(lua_State* L) {
+  lgame_getwindowsurface(L);
   return 1;
 }
 
