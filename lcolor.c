@@ -4,7 +4,7 @@
 #include <lua/lauxlib.h>
 
 #include "lcolor.h"
-
+#include "lnamedcolors.h"
 
 #define chkrgbval(v) \
   if ((v) < 0 || (v) > 255) \
@@ -83,11 +83,92 @@ lgame_Color lgame_unpack32(Uint32 color) {
   return c;
 }
 
+static int hex2num(const char* hex) {
+  int res = 0;
+  int dec = 0;
+  for (int i = 0; i < strlen(hex); i++) {
+    switch (hex[i]) {
+    case ('0'): dec = 0; break;
+    case ('1'): dec = 1; break;
+    case ('2'): dec = 2; break;
+    case ('3'): dec = 3; break;
+    case ('4'): dec = 4; break;
+    case ('5'): dec = 5; break;
+    case ('6'): dec = 6; break;
+    case ('7'): dec = 7; break;
+    case ('8'): dec = 8; break;
+    case ('9'): dec = 9; break;
+    case ('a'): case ('A'): dec = 10; break;
+    case ('b'): case ('B'): dec = 11; break;
+    case ('c'): case ('C'): dec = 12; break;
+    case ('d'): case ('D'): dec = 13; break;
+    case ('e'): case ('E'): dec = 14; break;
+    case ('f'): case ('F'): dec = 15; break;
+    default: return -1;
+    }
+    res += dec * (int)SDL_pow(16., (double)(strlen(hex) - i - 1));
+  }
+  return res;
+}
+
+#define ISHEXPREFIX(s) ((s[0] == '#') || (s[0] == '0' && s[1] == 'x'))
+#define ISHEX_0X(s) ((s[0] == '0') && (s[1] == 'x'))
+#define ISHEX_HASH(s) ((s[0] == '#'))
+
 lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
   idx = lua_absindex(L, idx);
   lgame_Color c;
   if (lua_type(L, idx) == LUA_TTABLE)
     c = lgame_checkcolortable(L, idx);
+  else if (lua_type(L, idx) == LUA_TSTRING) {
+    const char* stringval = lua_tostring(L, idx);
+    if (ISHEXPREFIX(stringval)) {
+      int colorval; 
+      int hasalpha;
+      int stringvallen = (int)strlen(stringval);
+      if (ISHEX_0X(stringval) && (stringvallen - 2) != 8 && (stringvallen - 2) != 6)
+        luaL_error(L, "invalid hex color format: %s", stringval);
+      else if (ISHEX_HASH(stringval) && (stringvallen - 1) != 8 && (stringvallen - 1) != 6)
+        luaL_error(L, "invalid hex color format: %s", stringval);
+
+      if (ISHEX_0X(stringval))        
+        stringval += 2;
+      else if (ISHEX_HASH(stringval)) 
+        stringval += 1;
+
+      if (stringvallen > 6)
+        hasalpha = 1;
+      else
+        hasalpha = 0;
+
+      colorval = hex2num(stringval);
+
+      if (hasalpha) {
+        c.r = (Uint8)((colorval >> 24) & 0xFF);
+        c.g = (Uint8)((colorval >> 16) & 0xFF);
+        c.b = (Uint8)((colorval >> 8) & 0xFF);
+        c.a = (Uint8)(colorval & 0xFF);
+      }
+      else {
+        c.r = (Uint8)((colorval >> 16) & 0xFF);
+        c.g = (Uint8)((colorval >> 8) & 0xFF);
+        c.b = (Uint8)(colorval & 0xFF);
+        c.a = 255;
+      }
+    }
+    else {
+      const SDL_Color* color = lgame_getcolorfromname(stringval);
+      if (color) {
+        c.r = color->r;
+        c.g = color->g;
+        c.b = color->b;
+        c.a = color->a;
+      }
+      else {
+        luaL_error(L, "unknown color name: %s", stringval);
+      }
+    }
+  }
   else if (lua_type(L, idx) == LUA_TNUMBER)
     c = lgame_unpack32((Uint32)luaL_checkinteger(L, idx));
   else if (lua_type(L, idx) == LUA_TUSERDATA)
