@@ -17,6 +17,7 @@ static int display_set_mode(lua_State* L);
 static int display_get_surface(lua_State* L);
 static int display_flip(lua_State* L);
 static int display_update(lua_State* L);
+static int display_get_driver(lua_State* L);
 
 const struct luaL_Reg lgame_display_module[] = {
   {"init", display_init},
@@ -26,6 +27,7 @@ const struct luaL_Reg lgame_display_module[] = {
   {"get_surface", display_get_surface},
   {"flip", display_flip},
   {"update", display_update},
+  {"get_driver", display_get_driver},
   {NULL, NULL}
 };
 
@@ -342,4 +344,9 @@ static int display_update(lua_State* L) {
     return luaL_error(L, SDL_GetError());
   }
   return 0;
+}
+
+static int display_get_driver(lua_State* L) {
+  lua_pushstring(L, SDL_GetCurrentVideoDriver());
+  return 1;
 }
