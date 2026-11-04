@@ -125,16 +125,17 @@ lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
     if (ISHEXPREFIX(stringval)) {
       int colorval; 
       int hasalpha;
-      int stringvallen = (int)strlen(stringval);
-      if (ISHEX_0X(stringval) && (stringvallen - 2) != 8 && (stringvallen - 2) != 6)
-        luaL_error(L, "invalid hex color format: %s", stringval);
-      else if (ISHEX_HASH(stringval) && (stringvallen - 1) != 8 && (stringvallen - 1) != 6)
-        luaL_error(L, "invalid hex color format: %s", stringval);
+      int stringvallen;
 
-      if (ISHEX_0X(stringval))        
+      if (ISHEX_0X(stringval))
         stringval += 2;
-      else if (ISHEX_HASH(stringval)) 
+      else if (ISHEX_HASH(stringval))
         stringval += 1;
+
+      stringvallen = (int)strlen(stringval);
+
+      if (stringvallen != 8 && stringvallen != 6)
+        luaL_error(L, "invalid hex color format: %s", stringval);
 
       if (stringvallen > 6)
         hasalpha = 1;
