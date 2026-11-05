@@ -122,7 +122,7 @@ lgame_Rect lgame_checkrecttable(lua_State* L, int idx) {
     lua_pop(L, 1);
   }
   else
-    luaL_error(L, "invalid table length for lgame.Rect: expected 2 or 4, got %d", (int)tl);
+    luaL_error(L, "the table length should be 2 or 4");
 
   return r;
 }
@@ -135,7 +135,7 @@ lgame_Rect lgame_checkrectarg(lua_State* L, int idx) {
   else if (lua_type(L, idx) == LUA_TUSERDATA) 
     r = *lgame_checkrect(L, idx);
   else 
-    luaL_error(L, "invalid argument type for lgame.Rect: expected table or lgame.Rect, got %s", luaL_typename(L, idx));
+    luaL_typeerror(L, idx, "rectlike");
   return r;
 }
 
@@ -158,7 +158,7 @@ lgame_Rect lgame_checkrectfromargs(lua_State* L, int offset) {
     r.h = (int)luaL_checkinteger(L, 4+offset);
   }
   else {
-    luaL_error(L, "invalid number of arguments for lgame.Rect: expected 1, 2 or 4, got %d", top);
+    luaL_error(L, "invalid number of arguments");
   }
   return r;
 }
@@ -188,10 +188,10 @@ static int Rect__index(lua_State* L) {
     case 'w': lua_pushinteger(L, self->w); return 1;
     case 'h': lua_pushinteger(L, self->h); return 1;
     default:      
-      return luaL_error(L, "attempt to index lgame.Rect with invalid key '%s'", key);
+      return luaL_error(L, "invalid '%s' key", key);
     }
   }
-  return luaL_error(L, "attempt to index lgame.Rect with non-string key");
+  return luaL_typeerror(L, 2, "string");
 }
 
 static int Rect__newindex(lua_State* L) {
@@ -205,8 +205,8 @@ static int Rect__newindex(lua_State* L) {
     case 'w': self->w = (int)luaL_checkinteger(L, 3); return 0;
     case 'h': self->h = (int)luaL_checkinteger(L, 3); return 0;
     default:
-      return luaL_error(L, "attempt to index lgame.Rect with invalid key '%s'", key);
+      return luaL_error(L, "invalid '%s' key", key);
     }
   }
-  return luaL_error(L, "attempt to index lgame.Rect with non-string key");
+  return luaL_typeerror(L, 2, "string");
 }

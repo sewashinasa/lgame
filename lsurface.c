@@ -99,7 +99,7 @@ lgame_Surface* lgame_pushsurface(lua_State* L) {
 
 lgame_Surface* lgame_checksurface(lua_State* L, int idx) {
   lgame_Surface*s = (lgame_Surface*)luaL_checkudata(L, idx, LGAME_SURFACE_METATABLE);
-  if (!s->surf) luaL_error(L, "invalid lgame.Surface: surface is NULL");
+  if (!s->surf) luaL_error(L, "surface is NULL");
   return s;
 }
 
@@ -131,7 +131,7 @@ static SDL_PixelFormat dispfmtalpha(void)
 
   dispsurf = lgame_get_windowsurface();
   if (!dispsurf) {
-    SDL_SetError("no video mode has been set");
+    SDL_SetError("video mode not set");
     return SDL_PIXELFORMAT_UNKNOWN;
   }
 
@@ -432,7 +432,7 @@ static int Surface_convert(lua_State* L) {
   else if (lua_isnoneornil(L, 2))
     convert_from = CONVERT_FROM_NONE;
   else
-    return luaL_error(L, "invalid argument");
+    return luaL_typeerror(L, 2, "integer, table, surface or nil");
   switch (convert_from) {
   case (CONVERT_FROM_DEPTH):
     depth = (int)lua_tointeger(L, 2);
@@ -471,7 +471,7 @@ static int Surface_convert(lua_State* L) {
   case (CONVERT_FROM_NONE):
     sdlsample = lgame_get_windowsurface();
     if (!sdlsample)
-      return luaL_error(L, "no video mode has been set");
+      return luaL_error(L, "video mode not set");
     if (!SDL_GetMasksForPixelFormat(sdlsample->format, &depth, &Rmask, &Gmask, &Bmask, &Amask))
       return luaL_error(L, SDL_GetError());
     break;

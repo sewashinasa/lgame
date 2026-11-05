@@ -321,7 +321,7 @@ static int Event__newindex(lua_State* L) {
   if (lua_type(L, 2) == LUA_TSTRING) {
     k = lua_tostring(L, 2);
     if (!strcmp(k, "type") && !lua_isinteger(L, 3)) {
-      return luaL_error(L, "the type field should be an integer");
+      return luaL_error(L, "key 'type' should be an integer");
     }
   }
   lua_getuservalue(L, 1);

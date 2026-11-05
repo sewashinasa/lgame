@@ -135,7 +135,7 @@ lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
       stringvallen = (int)strlen(stringval);
 
       if (stringvallen != 8 && stringvallen != 6)
-        luaL_error(L, "invalid hex color format: %s", stringval);
+        luaL_error(L, "invalid hex color length");
 
       if (stringvallen > 6)
         hasalpha = 1;
@@ -166,7 +166,7 @@ lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
         c.a = color->a;
       }
       else {
-        luaL_error(L, "unknown color name: %s", stringval);
+        luaL_error(L, "unknown color name");
       }
     }
   }
@@ -175,7 +175,7 @@ lgame_Color lgame_checkcolorarg(lua_State* L, int idx) {
   else if (lua_type(L, idx) == LUA_TUSERDATA)
     c = *lgame_checkcolor(L, idx);
   else
-    luaL_error(L, "invalid argument type for lgame.Color: expected table or lgame.Color, got %s", luaL_typename(L, idx));
+    luaL_typeerror(L, idx, "colorlike");
   return c;
 }
 
@@ -207,7 +207,7 @@ lgame_Color lgame_checkcolorfromargs(lua_State* L, int offset) {
     c.a = (Uint8)a;
   }
   else {
-    luaL_error(L, "invalid number of arguments for lgame.Color: expected 1, 3 or 4, got %d", top);
+    luaL_error(L, "invalid number of arguments");
   }
   return c;
 }
@@ -236,10 +236,10 @@ static int Color__index(lua_State* L) {
     case 'b': lua_pushinteger(L, self->b); return 1;
     case 'a': lua_pushinteger(L, self->a); return 1;
     default:
-      return luaL_error(L, "attempt to index lgame.Color with invalid key '%s'", key);
+      return luaL_error(L, "invalid '%s' key", key);
     }
   }
-  return luaL_error(L, "attempt to index lgame.Color with non-string key");
+  return luaL_typeerror(L, 2, "string");
 }
 
 static int Color__newindex(lua_State* L) {
@@ -253,8 +253,8 @@ static int Color__newindex(lua_State* L) {
     case 'b': self->b = (Uint8)luaL_checkinteger(L, 3); return 0;
     case 'a': self->a = (Uint8)luaL_checkinteger(L, 3); return 0;
     default:
-      return luaL_error(L, "attempt to index lgame.Color with invalid key '%s'", key);
+      return luaL_error(L, "invalid '%s' key", key);
     }
   }
-  return luaL_error(L, "attempt to index lgame.Color with non-string key");
+  return luaL_typeerror(L, 2, "string");
 }

@@ -184,7 +184,7 @@ static int display_get_surface(lua_State* L) {
 
 static int display_flip(lua_State* L) {
   if (!lgame_display_mode_set)
-    return luaL_error(L, "window not opened");
+    return luaL_error(L, "video mode not set");
   if (lgame_validate_window_surface) {
     lgame_Surface* ws;
     lgame_validate_window_surface = 0;
@@ -320,7 +320,7 @@ static int display_update(lua_State* L) {
   SDL_Rect rects[128] = { 0 };
   int numrects;
   if (!lgame_display_mode_set)
-    return luaL_error(L, "window not opened");
+    return luaL_error(L, "video mode not set");
   if (lua_isnil(L, 1))
     return 0;
   if (lua_isnone(L, 1))
@@ -338,7 +338,7 @@ static int display_update(lua_State* L) {
     }
   }
   else {
-    return luaL_error(L, "expected rect-style or nil or none argument or table of rect-style values");
+    return luaL_error(L, "expected rectstyle or table of rectstyle values");
   }
   if (!SDL_UpdateWindowSurfaceRects(lgame_Window, rects, numrects)) {
     return luaL_error(L, SDL_GetError());

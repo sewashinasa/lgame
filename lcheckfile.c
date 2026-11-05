@@ -34,7 +34,7 @@ SDL_IOStream* lgame_checkreadfile(lua_State* L, int fi) {
     io = SDL_IOFromConstMem(bytes, szbytes);
   }
   else {
-    luaL_error(L, "expected file like argument (string or FILE*)");
+    luaL_typeerror(L, fi, "string or FILE*");
   }
   if (io == NULL)
     luaL_error(L, SDL_GetError());
@@ -62,7 +62,7 @@ SDL_IOStream* lgame_checkwritefile(lua_State* L, int fi, int *dyn) {
     if (dyn) *dyn = 1;
   }
   else {
-    luaL_error(L, "expected file like argument (string or FILE*)");
+    luaL_typeerror(L, fi, "string or FILE*");
   }
   if (io == NULL)
     luaL_error(L, SDL_GetError());
