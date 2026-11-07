@@ -11,6 +11,7 @@
 #include "levent.h"
 #include "lmouse.h"
 #include "lkey.h"
+#include "lmixer.h"
 #include "lconsts.h"
 #include "lmethod.h"
 
@@ -58,6 +59,8 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmetatable(L, LGAME_SURFACE_METATABLE, lgame_Surface_methods, lgame_Surface_metamethods);
   createmetatable(L, LGAME_EVENT_METATABLE, lgame_Event_methods, lgame_Event_metamethods);
   createmetatable(L, LGAME_SCANCODEWRAPPER_METATABLE, NULL, lgame_ScancodeWrapper_methods);
+  createmetatable(L, LGAME_SOUND_METATABLE, lgame_Sound_methods, lgame_Sound_metamethods);
+  createmetatable(L, LGAME_CHANNEL_METATABLE, lgame_Channel_methods, lgame_Channel_metamethods);
 
   lua_newtable(L);
   
@@ -73,6 +76,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "event", lgame_event_module);
   createmodule(L, "mouse", lgame_mouse_module);
   createmodule(L, "key", lgame_key_module);
+  createmodule(L, "mixer", lgame_mixer_module);
 
   pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
   pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));
