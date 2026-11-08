@@ -788,7 +788,23 @@ static int Surface_get_shifts(lua_State* L) {
 static int Surface__index(lua_State* L) {
   lgame_Surface* self = lgame_checksurface(L, 1);
   const char* key = luaL_checkstring(L, 2);
-  lgame_getmethod(L, 1, key);
+  if (strcmp(key, "width") == 0)
+    lua_pushinteger(L, self->surf->w);
+  else if (strcmp(key, "height") == 0)
+    lua_pushinteger(L, self->surf->h);
+  else if (strcmp(key, "size") == 0) {
+    lua_createtable(L, 2, 0);
+    lua_pushinteger(L, self->surf->w);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, self->surf->h);
+    lua_rawseti(L, -2, 2);
+  }
+  else if (strcmp(key, "_pixels_address") == 0) {
+    lua_pushinteger(L, (intptr_t)self->surf->pixels);
+  }
+  else {
+    lgame_getmethod(L, 1, key);
+  }
   return 1;
 }
 
