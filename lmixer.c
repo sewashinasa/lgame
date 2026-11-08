@@ -578,7 +578,7 @@ static int Sound_play(lua_State* L) {
   int maxtime = (int)luaL_optinteger(L, 3, 0);
   Sint64 ms = (Sint64)luaL_optinteger(L, 4, 0);
   SDL_PropertiesID props = 0;
-  if (loops > 0 || maxtime > 0 || ms > 0) {
+  if (loops|| maxtime|| ms) {
     props = SDL_CreateProperties();
     if (!props)
       return luaL_error(L, SDL_GetError());
@@ -747,7 +747,7 @@ static int Channel_play(lua_State* L) {
   Sint64 maxtime = (Sint64)luaL_optinteger(L, 4, 0);
   Sint64 ms = (Sint64)luaL_optinteger(L, 5, 0);
   SDL_PropertiesID props = 0;
-  if (loops > 0 || maxtime > 0 || ms > 0) {
+  if (loops || maxtime || ms) {
     props = SDL_CreateProperties();
     if (!props)
       return luaL_error(L, SDL_GetError());
