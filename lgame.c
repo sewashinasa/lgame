@@ -12,6 +12,7 @@
 #include "lmouse.h"
 #include "lkey.h"
 #include "lmixer.h"
+#include "lmusic.h"
 #include "lconsts.h"
 #include "lmethod.h"
 
@@ -35,6 +36,17 @@ static void createmodule(lua_State* L,
   lua_newtable(L);
   luaL_setfuncs(L, module, 0);
   lua_setfield(L, -2, name);
+}
+
+static void createsubmodule(lua_State* L, 
+  const char* parent, 
+  const char* child, 
+  const struct luaL_Reg* module) {
+  lua_getfield(L, -1, parent);
+  lua_newtable(L);
+  luaL_setfuncs(L, module, 0);
+  lua_setfield(L, -2, child);
+  lua_pop(L, 1);
 }
 
 static void pushfunction(lua_State* L, const char* n, lua_CFunction f) {
@@ -77,6 +89,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "mouse", lgame_mouse_module);
   createmodule(L, "key", lgame_key_module);
   createmodule(L, "mixer", lgame_mixer_module);
+  createsubmodule(L, "mixer", "music", lgame_music_module);
 
   pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
   pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));

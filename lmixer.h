@@ -39,4 +39,7 @@ lgame_Channel* lgame_pushchannel(lua_State* L);
 lgame_Channel* lgame_checkchannel(lua_State* L, int idx);
 lgame_Channel* lgame_testchannel(lua_State* L, int idx);
 
+MIX_Mixer* lgame_getmixer(void);
+int lgame_getmixerinit(void);
+
 #endif

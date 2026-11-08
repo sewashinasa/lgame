@@ -4,6 +4,7 @@
 #include <lua/lauxlib.h>
 
 #include "lmixer.h"
+#include "lmusic.h"
 #include "lmethod.h"
 #include "lcheckfile.h"
 
@@ -184,6 +185,14 @@ lgame_Channel* lgame_checkchannel(lua_State* L, int idx) {
 
 lgame_Channel* lgame_testchannel(lua_State* L, int idx) {
   return (lgame_Channel*)luaL_testudata(L, idx, LGAME_CHANNEL_METATABLE);
+}
+
+MIX_Mixer* lgame_getmixer(void) {
+  return lgame_Mixer;
+}
+
+int lgame_getmixerinit(void) {
+  return lgame_mixer_initialized;
 }
 
 #define CHANNELS_SUC_ERROR  0
@@ -410,6 +419,7 @@ static int mixer_pre_init(lua_State* L) {
 static int mixer_quit(lua_State* L) {
   if (!lgame_mixer_initialized)
     return 0;
+  lgame_freemusic();
   free_channels();
   if (lgame_Mixer) {
     MIX_DestroyMixer(lgame_Mixer);
