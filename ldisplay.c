@@ -316,8 +316,10 @@ static int isrectstyleargs(lua_State* L) {
   return 0;
 }
 
+#define MAX_RECTS 128
+
 static int display_update(lua_State* L) {
-  SDL_Rect rects[128] = { 0 };
+  SDL_Rect rects[MAX_RECTS] = { 0 };
   int numrects;
   if (!lgame_display_mode_set)
     return luaL_error(L, "video mode not set");
@@ -331,6 +333,8 @@ static int display_update(lua_State* L) {
   }
   else if (lua_istable(L, 1)) {
     numrects = (int)lua_rawlen(L, 1);
+    if (numrects > MAX_RECTS)
+      return luaL_error(L, "the length of the table should be no more than %d", MAX_RECTS);
     for (int i = 0; i < numrects; i++) {
       lua_rawgeti(L, 1, (lua_Integer)(i + 1));
       rects[i] = lgame_checkrectarg(L, -1);
