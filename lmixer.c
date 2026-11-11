@@ -33,6 +33,7 @@ static int mixer_set_num_channels(lua_State* L);
 static int mixer_get_num_channels(lua_State* L);
 static int mixer_find_channel(lua_State* L);
 static int mixer_get_busy(lua_State* L);
+static int image_get_sdl_mixer_version(lua_State * L);
 
 static int Sound_new(lua_State* L);
 static int Sound_play(lua_State* L);
@@ -71,6 +72,7 @@ const struct luaL_Reg lgame_mixer_module[] = {
   {"get_num_channels", mixer_get_num_channels},
   {"find_channel", mixer_find_channel},
   {"get_busy", mixer_get_busy},
+  {"get_sdl_mixer_version", image_get_sdl_mixer_version},
   {"Sound", Sound_new},
   {"Channel", Channel_new},
   {NULL, NULL}
@@ -553,6 +555,29 @@ static int mixer_get_busy(lua_State* L) {
     }
   }
   lua_pushboolean(L, busy);
+  return 1;
+}
+
+static int image_get_sdl_mixer_version(lua_State* L) {
+  int linked = 1;
+  if (!lua_isnoneornil(L, 1))
+    linked = lua_toboolean(L, 1);
+  int version;
+  if (linked)
+    version = MIX_Version();
+  else
+    version = SDL_MIXER_VERSION;
+  int major, minor, patch;
+  major = version / 1000000;
+  minor = (version / 1000) % 1000;
+  patch = version % 1000;
+  lua_createtable(L, 3, 0);
+  lua_pushinteger(L, major);
+  lua_rawseti(L, -2, 1);
+  lua_pushinteger(L, minor);
+  lua_rawseti(L, -2, 2);
+  lua_pushinteger(L, patch);
+  lua_rawseti(L, -2, 3);
   return 1;
 }
 
