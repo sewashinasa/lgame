@@ -13,6 +13,7 @@
 #include "lkey.h"
 #include "limage.h"
 #include "lmixer.h"
+#include "lfont.h"
 #include "lmusic.h"
 #include "lconsts.h"
 #include "lmethod.h"
@@ -74,6 +75,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmetatable(L, LGAME_SCANCODEWRAPPER_METATABLE, NULL, lgame_ScancodeWrapper_methods);
   createmetatable(L, LGAME_SOUND_METATABLE, lgame_Sound_methods, lgame_Sound_metamethods);
   createmetatable(L, LGAME_CHANNEL_METATABLE, lgame_Channel_methods, lgame_Channel_metamethods);
+  createmetatable(L, LGAME_FONT_METATABLE, lgame_Font_methods, lgame_Font_metamethods);
 
   lua_newtable(L);
   
@@ -90,6 +92,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "mouse", lgame_mouse_module);
   createmodule(L, "key", lgame_key_module);
   createmodule(L, "image", lgame_image_module);
+  createmodule(L, "font", lgame_font_module);
   createmodule(L, "mixer", lgame_mixer_module);
   createsubmodule(L, "mixer", "music", lgame_music_module);
 
@@ -106,6 +109,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   LGAMECONSTS_DEFINEKEYS(L);
   LGAMECONSTS_DEFINEMODS(L);
   LGAMECONSTS_DEFINEDISPLAY(L);
+  LGAMECONSTS_DEFINEFONTDIRS(L);
 
   return 1;
 }

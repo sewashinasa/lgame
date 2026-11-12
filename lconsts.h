@@ -194,6 +194,12 @@
 #define LGAME_SHOWN      0x00000000
 #define LGAME_HIDDEN     0x00000008
 
+/* font directions */
+#define LGAME_DIRECTION_LTR 4
+#define LGAME_DIRECTION_RTL 5
+#define LGAME_DIRECTION_TTB 6
+#define LGAME_DIRECTION_BTT 7
+
 /*==================================================================================================================*/
 
 #define LGAME_DEFINECONST(L, constname) \
@@ -367,5 +373,11 @@
   LGAME_DEFINECONST(L, SCALED); \
   LGAME_DEFINECONST(L, SHOWN); \
   LGAME_DEFINECONST(L, HIDDEN);
+
+#define LGAMECONSTS_DEFINEFONTDIRS(L) \
+  LGAME_DEFINECONST(L, DIRECTION_LTR); \
+  LGAME_DEFINECONST(L, DIRECTION_RTL); \
+  LGAME_DEFINECONST(L, DIRECTION_TTB); \
+  LGAME_DEFINECONST(L, DIRECTION_BTT); \
 
 #endif
