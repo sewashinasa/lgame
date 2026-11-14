@@ -25,6 +25,8 @@ static int Surface_blit(lua_State* L);
 static int Surface_fill(lua_State* L);
 static int Surface_convert(lua_State* L);
 static int Surface_convert_alpha(lua_State* L);
+static int Surface_set_colorkey(lua_State* L);
+static int Surface_get_colorkey(lua_State* L);
 static int Surface_get_at(lua_State* L);
 static int Surface_set_at(lua_State* L);
 static int Surface_subsurface(lua_State* L);
@@ -58,6 +60,8 @@ const struct luaL_Reg lgame_Surface_methods[] = {
   {"fill", Surface_fill},
   {"convert", Surface_convert},
   {"convert_alpha", Surface_convert_alpha},
+  {"set_colorkey", Surface_set_colorkey},
+  {"get_colorkey", Surface_get_colorkey},
   {"get_at", Surface_get_at},
   {"set_at", Surface_set_at},
   {"subsurface", Surface_subsurface},
@@ -498,6 +502,65 @@ static int Surface_convert_alpha(lua_State* L) {
   conv->surf = SDL_ConvertSurface(self->surf, pfa);
   if (!conv->surf)
     return luaL_error(L, SDL_GetError());
+  return 1;
+}
+
+static int Surface_set_colorkey(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  lgame_Color* pcolor = NULL;
+  if (!lua_isnoneornil(L, 2)) {
+    lgame_Color color = lgame_checkcolorarg(L, 2);
+    pcolor = &color;
+  }
+  int flags = (int)luaL_checkinteger(L, 3);
+  if (pcolor) {
+    if (flags & LGAME_RLEACCEL) {
+      if (!SDL_SetSurfaceRLE(self->surf, true))
+        return luaL_error(L, SDL_GetError());
+    }
+    const SDL_PixelFormatDetails* pfd = SDL_GetPixelFormatDetails(self->surf->format);
+    if (pfd == NULL)
+      return luaL_error(L, SDL_GetError());
+    SDL_Palette* pal = SDL_GetSurfacePalette(self->surf);
+    Uint32 key = SDL_MapRGBA(pfd, pal, pcolor->r, pcolor->g, pcolor->b, pcolor->a);
+    if (!SDL_SetSurfaceColorKey(self->surf, true, key))
+      return luaL_error(L, SDL_GetError());
+  }
+  else {
+    if (SDL_SurfaceHasRLE(self->surf))
+      if (!SDL_SetSurfaceRLE(self->surf, false))
+        return luaL_error(L, SDL_GetError());
+    if (SDL_SurfaceHasColorKey(self->surf))
+      if (!SDL_SetSurfaceColorKey(self->surf, false, 0))
+        return luaL_error(L, SDL_GetError());
+  }
+  return 0;
+}
+
+static int Surface_get_colorkey(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  if (SDL_SurfaceHasColorKey(self->surf)) {
+    Uint32 key;
+    if (!SDL_GetSurfaceColorKey(self->surf, &key))
+      return luaL_error(L, SDL_GetError());
+    const SDL_PixelFormatDetails* pfd = SDL_GetPixelFormatDetails(self->surf->format);
+    if (pfd == NULL)
+      return luaL_error(L, SDL_GetError());
+    SDL_Palette* pal = SDL_GetSurfacePalette(self->surf);
+    Uint8 r, g, b, a;
+    SDL_GetRGBA(key, pfd, pal, &r, &g, &b, &a);
+    lua_createtable(L, 4, 0);
+    lua_pushinteger(L, r);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, g);
+    lua_rawseti(L, -2, 2);
+    lua_pushinteger(L, b);
+    lua_rawseti(L, -2, 3);
+    lua_pushinteger(L, a);
+    lua_rawseti(L, -2, 4);
+    return 1;
+  }
+  lua_pushnil(L);
   return 1;
 }
 
