@@ -5,6 +5,7 @@
 
 #include "lmusic.h"
 #include "lmixer.h"
+#include "lconsts.h"
 #include "lcheckfile.h"
 
 #define CHECK_MIXER_INIT(L) \
@@ -28,6 +29,8 @@ static int music_get_volume(lua_State * L);
 static int music_get_busy(lua_State * L);
 static int music_set_pos(lua_State * L);
 static int music_get_pos(lua_State * L);
+static int music_set_endevent(lua_State * L);
+static int music_get_endevent(lua_State * L);
 static int music_get_metadata(lua_State * L);
 
 const struct luaL_Reg lgame_music_module[] = {
@@ -44,12 +47,25 @@ const struct luaL_Reg lgame_music_module[] = {
   {"get_busy", music_get_busy},
   {"set_pos", music_set_pos},
   {"get_pos", music_get_pos},
+  {"set_endevent", music_set_endevent},
+  {"get_endevent", music_get_endevent},
   {"get_metadata", music_get_metadata},
   {NULL, NULL}
 };
 
 static MIX_Track* lgame_MusicTrack = NULL;
 static MIX_Audio* lgame_MusicAudio = NULL;
+
+static Uint32 lgame_MusicEvent = LGAME_NOEVENT;
+
+static void track_stopped_callback(void* userdata, MIX_Track* track) {
+  (void)userdata;
+  (void)track;
+  SDL_Event event;
+  SDL_zero(event);
+  event.type = lgame_MusicEvent;
+  SDL_PushEvent(&event);
+}
 
 void lgame_freemusic(void) {
   if (lgame_MusicAudio && lgame_MusicTrack) { 
@@ -245,6 +261,27 @@ static int music_get_pos(lua_State* L) {
   if (pos_ms < 0)
     return luaL_error(L, SDL_GetError());
   lua_pushinteger(L, pos_ms);
+  return 1;
+}
+
+static int music_set_endevent(lua_State* L) {
+  CHECK_MIXER_INIT(L);
+  CHECK_MUSIC_LOAD(L);
+  if (lua_isnoneornil(L, 1)) {
+    lgame_MusicEvent = LGAME_NOEVENT;
+    if (!MIX_SetTrackStoppedCallback(lgame_MusicTrack, NULL, NULL))
+      return luaL_error(L, SDL_GetError());
+    return 0;
+  }
+  Uint32 type = (Uint32)luaL_checkinteger(L, 1);
+  lgame_MusicEvent = type;
+  if (!MIX_SetTrackStoppedCallback(lgame_MusicTrack, track_stopped_callback, NULL))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int music_get_endevent(lua_State* L) {
+  lua_pushinteger(L, lgame_MusicEvent);
   return 1;
 }
 

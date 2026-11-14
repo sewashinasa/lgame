@@ -6,6 +6,7 @@
 #include "lmixer.h"
 #include "lmusic.h"
 #include "lmethod.h"
+#include "lconsts.h"
 #include "lcheckfile.h"
 
 #define DEFAULT_FREQUENCY 44100
@@ -56,6 +57,8 @@ static int Channel_set_volume(lua_State* L);
 static int Channel_get_volume(lua_State* L);
 static int Channel_get_busy(lua_State* L);
 static int Channel_get_sound(lua_State* L);
+static int Channel_set_endevent(lua_State * L);
+static int Channel_get_endevent(lua_State * L);
 static int Channel__index(lua_State* L);
 
 const struct luaL_Reg lgame_mixer_module[] = {
@@ -105,6 +108,8 @@ const struct luaL_Reg lgame_Channel_methods[] = {
   {"get_volume", Channel_get_volume},
   {"get_busy", Channel_get_busy},
   {"get_sound", Channel_get_sound},
+  {"set_endevent", Channel_set_endevent},
+  {"get_endevent", Channel_get_endevent},
   {NULL, NULL}
 };
 
@@ -118,6 +123,7 @@ static int lgame_mixer_initialized = 0;
 
 typedef struct lgame_InternalChannel {
   MIX_Track* track;
+  Uint32 event;
   Uint64 start_time;
   int reserved;
 } lgame_InternalChannel;
@@ -143,6 +149,23 @@ static struct lgame_mixer_init_args {
   .chunksize = DEFAULT_CHUNKSIZE,
   .devname = DEFAULT_DEVNAME,
 };
+
+static void track_stopped_callback(void* userdata, MIX_Track* track) {
+  (void)userdata;
+  Uint32 type = 0;
+  lgame_InternalChannel* channels = lgame_AllocatedChannels.channels;
+  int nchannels = lgame_AllocatedChannels.nchannels;
+  for (int i = 0; i < nchannels; i++)
+    if (channels[i].track == track)
+      if (channels[i].event)
+        type = channels[i].event;
+  if (type) {
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = type;
+    SDL_PushEvent(&event);
+  }
+}
 
 lgame_Sound* lgame_pushsound(lua_State* L, MIX_Audio *audio) {
   lgame_Sound* s;
@@ -210,6 +233,7 @@ static int alloc_channels(int count) {
       if (lgame_AllocatedChannels.channels[i].track) {
         MIX_DestroyTrack(lgame_AllocatedChannels.channels[i].track);
         lgame_AllocatedChannels.channels[i].track = NULL;
+        lgame_AllocatedChannels.channels[i].event = LGAME_NOEVENT;
         lgame_AllocatedChannels.channels[i].start_time = 0;
         lgame_AllocatedChannels.channels[i].reserved = 0;
       }
@@ -228,6 +252,7 @@ static int alloc_channels(int count) {
   for (int i = 0; i < lgame_AllocatedChannels.nchannels; i++) {
     lgame_AllocatedChannels.channels[i].start_time = 0;
     lgame_AllocatedChannels.channels[i].reserved = 0;
+    lgame_AllocatedChannels.channels[i].event = LGAME_NOEVENT;
     lgame_AllocatedChannels.channels[i].track = MIX_CreateTrack(lgame_Mixer);
     if (lgame_AllocatedChannels.channels[i].track == NULL) {
       for (int j = 0; j < i; j++) {
@@ -272,6 +297,7 @@ static int realloc_channels(int count) {
   for (int i = last_nchannels; i < count; i++) {
     lgame_AllocatedChannels.channels[i].start_time = 0;
     lgame_AllocatedChannels.channels[i].reserved = 0;
+    lgame_AllocatedChannels.channels[i].event = LGAME_NOEVENT;
     lgame_AllocatedChannels.channels[i].track = MIX_CreateTrack(lgame_Mixer);
     if (lgame_AllocatedChannels.channels[i].track == NULL) {
       lgame_AllocatedChannels.nchannels = 0;
@@ -889,6 +915,30 @@ static int Channel_get_sound(lua_State* L) {
     lua_rawgetp(L, LUA_REGISTRYINDEX, (const void*)audio);
   else
     lua_pushnil(L);
+  return 1;
+}
+
+static int Channel_set_endevent(lua_State* L) {
+  CHECK_MIXER_INIT(L);
+  lgame_Channel* self = lgame_checkchannel(L, 1);
+  lgame_InternalChannel *channels = lgame_AllocatedChannels.channels;
+  if (lua_isnoneornil(L, 1)) {
+    channels[self->channel].event = LGAME_NOEVENT;
+    if (!MIX_SetTrackStoppedCallback(channels[self->channel].track, NULL, NULL))
+      return luaL_error(L, SDL_GetError());
+    return 0;
+  }
+  Uint32 type = (Uint32)luaL_checkinteger(L, 1);
+  channels[self->channel].event = type;
+  if (!MIX_SetTrackStoppedCallback(channels[self->channel].track, track_stopped_callback, NULL))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int Channel_get_endevent(lua_State* L) {
+  CHECK_MIXER_INIT(L);
+  lgame_Channel* self = lgame_checkchannel(L, 1);
+  lua_pushinteger(L, lgame_AllocatedChannels.channels[self->channel].event);
   return 1;
 }
 
