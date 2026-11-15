@@ -577,6 +577,9 @@ static int Surface_set_alpha(lua_State* L) {
   int alpha = (int)luaL_optinteger(L, 2, -1);
   int flags = (int)luaL_optinteger(L, 3, 0);
   if (alpha == -1) {
+    if (SDL_SurfaceHasRLE(self->surf))
+      if (!SDL_SetSurfaceRLE(self->surf, false))
+        return luaL_error(L, SDL_GetError());
     if (!SDL_SetSurfaceBlendMode(self->surf, SDL_BLENDMODE_NONE))
       return luaL_error(L, SDL_GetError());
     alpha = 255;
