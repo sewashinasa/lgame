@@ -11,6 +11,7 @@
 #include "levent.h"
 #include "lmouse.h"
 #include "lkey.h"
+#include "ltransform.h"
 #include "limage.h"
 #include "lmixer.h"
 #include "lfont.h"
@@ -91,6 +92,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmodule(L, "event", lgame_event_module);
   createmodule(L, "mouse", lgame_mouse_module);
   createmodule(L, "key", lgame_key_module);
+  createmodule(L, "transform", lgame_transform_module);
   createmodule(L, "image", lgame_image_module);
   createmodule(L, "font", lgame_font_module);
   createmodule(L, "mixer", lgame_mixer_module);
