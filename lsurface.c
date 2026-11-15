@@ -27,6 +27,8 @@ static int Surface_convert(lua_State* L);
 static int Surface_convert_alpha(lua_State* L);
 static int Surface_set_colorkey(lua_State* L);
 static int Surface_get_colorkey(lua_State* L);
+static int Surface_set_alpha(lua_State* L);
+static int Surface_get_alpha(lua_State* L);
 static int Surface_get_at(lua_State* L);
 static int Surface_set_at(lua_State* L);
 static int Surface_subsurface(lua_State* L);
@@ -62,6 +64,8 @@ const struct luaL_Reg lgame_Surface_methods[] = {
   {"convert_alpha", Surface_convert_alpha},
   {"set_colorkey", Surface_set_colorkey},
   {"get_colorkey", Surface_get_colorkey},
+  {"set_alpha", Surface_set_alpha},
+  {"get_alpha", Surface_get_alpha},
   {"get_at", Surface_get_at},
   {"set_at", Surface_set_at},
   {"subsurface", Surface_subsurface},
@@ -561,6 +565,45 @@ static int Surface_get_colorkey(lua_State* L) {
     return 1;
   }
   lua_pushnil(L);
+  return 1;
+}
+
+static int Surface_set_alpha(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  int alpha = (int)luaL_optinteger(L, 2, -1);
+  int flags = (int)luaL_optinteger(L, 3, 0);
+  if (alpha == -1) {
+    if (!SDL_SetSurfaceBlendMode(self->surf, SDL_BLENDMODE_NONE))
+      return luaL_error(L, SDL_GetError());
+    alpha = 255;
+  }
+  SDL_BlendMode blend;
+  if (!SDL_GetSurfaceBlendMode(self->surf, &blend)) {
+    return luaL_error(L, SDL_GetError());
+  }
+  if (blend == SDL_BLENDMODE_NONE && !lua_isnoneornil(L, 2)) {
+    if (!SDL_SetSurfaceBlendMode(self->surf, SDL_BLENDMODE_BLEND))
+      return luaL_error(L, SDL_GetError());
+  }
+  if (flags & LGAME_RLEACCEL) {
+    if (!SDL_SetSurfaceRLE(self->surf, true))
+      return luaL_error(L, SDL_GetError());
+  }
+  else {
+    if (!SDL_SetSurfaceRLE(self->surf, false))
+      return luaL_error(L, SDL_GetError());
+  }
+  if (!SDL_SetSurfaceAlphaMod(self->surf, (Uint8)alpha))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int Surface_get_alpha(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  Uint8 alpha;
+  if (!SDL_GetSurfaceAlphaMod(self->surf, &alpha))
+    return luaL_error(L, SDL_GetError());
+  lua_pushinteger(L, alpha);
   return 1;
 }
 
