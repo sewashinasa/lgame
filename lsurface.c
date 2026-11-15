@@ -516,10 +516,14 @@ static int Surface_set_colorkey(lua_State* L) {
     lgame_Color color = lgame_checkcolorarg(L, 2);
     pcolor = &color;
   }
-  int flags = (int)luaL_checkinteger(L, 3);
+  int flags = (int)luaL_optinteger(L, 3, 0);
   if (pcolor) {
     if (flags & LGAME_RLEACCEL) {
       if (!SDL_SetSurfaceRLE(self->surf, true))
+        return luaL_error(L, SDL_GetError());
+    }
+    else {
+      if (!SDL_SetSurfaceRLE(self->surf, false))
         return luaL_error(L, SDL_GetError());
     }
     const SDL_PixelFormatDetails* pfd = SDL_GetPixelFormatDetails(self->surf->format);
