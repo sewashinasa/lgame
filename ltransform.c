@@ -4,17 +4,20 @@
 #include <lua/lauxlib.h>
 
 #include "ltransform.h"
+#include "lscale2x.h"
 #include "lsurface.h"
 #include "lpoint.h"
 
 static int transform_flip(lua_State* L);
 static int transform_scale(lua_State* L);
 static int transform_scale_by(lua_State* L);
+static int transform_scale2x(lua_State* L);
 
 const struct luaL_Reg lgame_transform_module[] = {
   {"flip", transform_flip},
   {"scale", transform_scale},
   {"scale_by", transform_scale_by},
+  {"scale2x", transform_scale2x},
   {NULL, NULL}
 };
 
@@ -214,5 +217,34 @@ static int transform_scale_by(lua_State* L) {
     lgame_Surface* res = lgame_pushsurface(L);
     res->surf = dst_surface;
   }
+  return 1;
+}
+
+static int transform_scale2x(lua_State* L) {
+  lgame_Surface* src = lgame_checksurface(L, 1);
+  lgame_Surface* dst = optsurface(L, 2, NULL);
+
+  lgame_scale2x_function scale2x_function = NULL;
+  switch (SDL_BYTESPERPIXEL(src->surf->format)) {
+  case (4):
+    scale2x_function = lgame_scale2x_4bpp;
+    break;
+  case (3):
+    scale2x_function = lgame_scale2x_3bpp;
+    break;
+  case (2):
+    scale2x_function = lgame_scale2x_2bpp;
+    break;
+  case (1):
+    scale2x_function = lgame_scale2x_1bpp;
+    break;
+  default:
+    return luaL_error(L, "unsupport pixel format");
+  }
+  lgame_Surface* res = lgame_pushsurface(L);
+  res->surf = scale2x_function(src->surf, dst ? dst->surf : NULL);
+  if (res->surf == NULL)
+    return luaL_error(L, SDL_GetError());
+
   return 1;
 }
