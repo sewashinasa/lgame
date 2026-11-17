@@ -1,6 +1,4 @@
 
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <lua/lua.h>
 #include <lua/lualib.h>
 #include <lua/lauxlib.h>
@@ -37,7 +35,7 @@ static void process_namehint(const char* s, char* buf) {
   for (int i = (int)strlen(s) - 1; i >= 0; i--)
     if (s[i] == '.')
       skip = i;
-  strncpy(buf, s + skip, NAMEHINT_SIZE);
+  SDL_strlcpy(buf, s + skip, NAMEHINT_SIZE);
   for (int i = 0; i < (int)strlen(buf); i++)
     buf[i] = SDL_toupper(buf[i]);
 }
