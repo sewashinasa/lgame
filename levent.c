@@ -18,6 +18,7 @@ static int event_get(lua_State* L);
 static int event_poll(lua_State* L);
 static int event_wait(lua_State* L);
 static int event_peek(lua_State* L);
+static int event_post(lua_State* L);
 
 const struct luaL_Reg lgame_event_module[] = {
   {"Event", Event_new},
@@ -26,6 +27,7 @@ const struct luaL_Reg lgame_event_module[] = {
   {"poll", event_poll},
   {"wait", event_wait},
   {"peek", event_peek},
+  {"post", event_post},
   {NULL, NULL}
 };
 
@@ -249,6 +251,36 @@ static void lgame_make_video_event(lua_State* L, int evobj, SDL_Event* ev) {
   lua_pop(L, 1);
 }
 
+static void lgame_make_posted_event(lua_State* L, int evobj, SDL_Event* ev) {
+  int src_uvidx;
+  int dst_uvidx;
+  int ref;
+  int ref_idx;
+
+  evobj = lua_absindex(L, evobj);
+  lua_getuservalue(L, evobj);
+  dst_uvidx = lua_gettop(L);
+
+  ref = (int)(uintptr_t)ev->user.data1;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+  ref_idx = lua_gettop(L);
+  lua_getuservalue(L, -1);
+  src_uvidx = ref_idx + 1;
+
+  lua_pushnil(L);
+  while (lua_next(L, src_uvidx)) {
+    lua_pushvalue(L, -2);
+    lua_pushvalue(L, -2); 
+    lua_rawset(L, dst_uvidx);
+    lua_pop(L, 1);
+  }
+
+  lua_remove(L, src_uvidx);
+  lua_remove(L, dst_uvidx);
+  lua_remove(L, ref_idx);
+  luaL_unref(L, LUA_REGISTRYINDEX, ref);
+}
+
 static void lgame_make_event(lua_State* L, int evobj, SDL_Event *ev) {
   evobj = lua_absindex(L, evobj);
   lua_getuservalue(L, evobj);
@@ -270,6 +302,9 @@ static void lgame_make_event(lua_State* L, int evobj, SDL_Event *ev) {
     break;
   case (LGAME_MOUSEWHEEL):
     lgame_make_mousewheel_event(L, evobj, ev);
+    break;
+  case (LGAME_POSTEDEVENT):
+    lgame_make_posted_event(L, evobj, ev);
     break;
   case (SDL_EVENT_WINDOW_MOUSE_ENTER):
   case (SDL_EVENT_WINDOW_MOUSE_LEAVE):
@@ -500,5 +535,17 @@ static const char* get_event_name(Uint32 type) {
 
 static int event_event_name(lua_State* L) {
   lua_pushstring(L, get_event_name((Uint32)luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+static int event_post(lua_State* L) {
+  lgame_checkevent(L, 1);
+  lua_settop(L, 1);
+  SDL_Event ev;
+  SDL_zero(ev);
+  ev.type = LGAME_POSTEDEVENT;
+  ev.user.data1 = (void*)(uintptr_t)luaL_ref(L, LUA_REGISTRYINDEX);
+  SDL_PushEvent(&ev);
+  lua_pushboolean(L, 1);
   return 1;
 }
