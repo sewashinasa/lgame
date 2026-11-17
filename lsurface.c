@@ -31,6 +31,8 @@ static int Surface_set_alpha(lua_State* L);
 static int Surface_get_alpha(lua_State* L);
 static int Surface_get_at(lua_State* L);
 static int Surface_set_at(lua_State* L);
+static int Surface_set_clip(lua_State* L);
+static int Surface_get_clip(lua_State* L);
 static int Surface_subsurface(lua_State* L);
 static int Surface_get_parent(lua_State* L);
 static int Surface_get_abs_parent(lua_State* L);
@@ -68,6 +70,8 @@ const struct luaL_Reg lgame_Surface_methods[] = {
   {"get_alpha", Surface_get_alpha},
   {"get_at", Surface_get_at},
   {"set_at", Surface_set_at},
+  {"set_clip", Surface_set_clip},
+  {"get_clip", Surface_get_clip},
   {"subsurface", Surface_subsurface},
   {"get_parent", Surface_get_parent},
   {"get_abs_parent", Surface_get_abs_parent},
@@ -740,6 +744,30 @@ static int Surface_set_at(lua_State* L) {
   if (SDL_MUSTLOCK(surface))
     SDL_UnlockSurface(surface);
   return 0;
+}
+
+static int Surface_set_clip(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  SDL_Rect rect, * prect;
+  if (!lua_isnoneornil(L, 2)) {
+    rect = lgame_checkrectarg(L, 2);
+    prect = &rect;
+  }
+  else {
+    prect = NULL;
+  }
+  if (!SDL_SetSurfaceClipRect(self->surf, prect))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int Surface_get_clip(lua_State* L) {
+  lgame_Surface* self = lgame_checksurface(L, 1);
+  SDL_Rect rect;
+  if (!SDL_GetSurfaceClipRect(self->surf, &rect))
+    return luaL_error(L, SDL_GetError());
+  memcpy(lgame_pushrect(L), &rect, sizeof(rect));
+  return 1;
 }
 
 static int Surface_subsurface(lua_State* L) {
