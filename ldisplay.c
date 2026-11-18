@@ -6,6 +6,7 @@
 #include "ldisplay.h"
 #include "lsurface.h"
 #include "lrect.h"
+#include "ltime.h"
 #include "lconsts.h"
 
 #define DEFAULT_TITLE "lgame window"
@@ -72,6 +73,7 @@ static int display_quit(lua_State* L) {
     lgame_setwindowsurface(L);
     lua_pop(L, 1);
   }
+  lgame_timer_map_quit();
   if (SDL_WasInit(SDL_INIT_EVENTS))
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
   if (SDL_WasInit(SDL_INIT_VIDEO))

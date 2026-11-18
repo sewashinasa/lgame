@@ -11,4 +11,6 @@
 
 const struct luaL_Reg lgame_time_module[];
 
+void lgame_timer_map_quit(void);
+
 #endif
