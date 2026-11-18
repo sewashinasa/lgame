@@ -18,6 +18,7 @@ static int event_get(lua_State* L);
 static int event_poll(lua_State* L);
 static int event_wait(lua_State* L);
 static int event_peek(lua_State* L);
+static int event_event_name(lua_State* L);
 static int event_post(lua_State* L);
 
 const struct luaL_Reg lgame_event_module[] = {
@@ -27,6 +28,7 @@ const struct luaL_Reg lgame_event_module[] = {
   {"poll", event_poll},
   {"wait", event_wait},
   {"peek", event_peek},
+  {"event_name", event_event_name},
   {"post", event_post},
   {NULL, NULL}
 };
@@ -528,9 +530,11 @@ static const char* get_event_name(Uint32 type) {
     return "VideoResize";
   case (LGAME_VIDEOEXPOSE):
     return "VideoExpose";
-  default:
-    return "Unknown";
   }
+  if (type >= LGAME_USEREVENT && type < LGAME_LASTEVENT) {
+    return "UserEvent";
+  }
+  return "Unknown";
 }
 
 static int event_event_name(lua_State* L) {
