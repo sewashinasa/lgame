@@ -331,12 +331,35 @@ static void checkpump(lua_State *L, int b) {
 
 static int Event_new(lua_State* L) {
   int type = (int)luaL_checkinteger(L, 1);
+  int src_attrs_idx;
+  int dst_attrs_idx;
+  if (!lua_isnoneornil(L, 2)) {
+    luaL_checktype(L, 2, LUA_TTABLE);
+    src_attrs_idx = lua_gettop(L);
+  }
+  else {
+    src_attrs_idx = -1;
+  }
 
   lgame_pushevent(L);
+
   lua_getuservalue(L, -1);
+  dst_attrs_idx = lua_gettop(L);
+
   lua_pushinteger(L, type);
-  lua_setfield(L, -2, "type");
-  lua_pop(L, 1);
+  lua_setfield(L, dst_attrs_idx, "type");
+
+  if (src_attrs_idx != -1) {
+    lua_pushnil(L);
+    while (lua_next(L, src_attrs_idx)) {
+      lua_pushvalue(L, -2);
+      lua_pushvalue(L, -2);
+      lua_rawset(L, dst_attrs_idx);
+      lua_pop(L, 1);
+    }
+  }
+
+  lua_remove(L, dst_attrs_idx);
 
   return 1;
 }
