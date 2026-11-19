@@ -75,6 +75,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   createmetatable(L, LGAME_SURFACE_METATABLE, lgame_Surface_methods, lgame_Surface_metamethods);
   createmetatable(L, LGAME_EVENT_METATABLE, lgame_Event_methods, lgame_Event_metamethods);
   createmetatable(L, LGAME_SCANCODEWRAPPER_METATABLE, NULL, lgame_ScancodeWrapper_methods);
+  createmetatable(L, LGAME_CLOCK_METATABLE, lgame_Clock_methods, lgame_Clock_metamethods);
   createmetatable(L, LGAME_SOUND_METATABLE, lgame_Sound_methods, lgame_Sound_metamethods);
   createmetatable(L, LGAME_CHANNEL_METATABLE, lgame_Channel_methods, lgame_Channel_metamethods);
   createmetatable(L, LGAME_FONT_METATABLE, lgame_Font_methods, lgame_Font_metamethods);
