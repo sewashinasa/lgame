@@ -20,6 +20,10 @@ static int display_flip(lua_State* L);
 static int display_update(lua_State* L);
 static int display_get_driver(lua_State* L);
 
+static int VideoInfo_new(lua_State* L);
+static int VideoInfo__index(lua_State* L);
+static int VideoInfo__tostring(lua_State* L);
+
 const struct luaL_Reg lgame_display_module[] = {
   {"init", display_init},
   {"quit", display_quit},
@@ -29,6 +33,13 @@ const struct luaL_Reg lgame_display_module[] = {
   {"flip", display_flip},
   {"update", display_update},
   {"get_driver", display_get_driver},
+  {"VideoInfo", VideoInfo_new},
+  {NULL, NULL}
+};
+
+const struct luaL_Reg lgame_VideoInfo_metamethods[] = {
+  {"__index", VideoInfo__index},
+  {"__tostring", VideoInfo__tostring},
   {NULL, NULL}
 };
 
@@ -39,6 +50,20 @@ static int lgame_display_initialized = 0;
 static int lgame_display_mode_set = 0;
 
 int lgame_validate_window_surface = 0;
+
+lgame_VideoInfo *lgame_pushvideoinfo(lua_State* L) {
+  lgame_VideoInfo* vinfo = (lgame_VideoInfo*)lua_newuserdata(L, sizeof(lgame_VideoInfo));
+  luaL_getmetatable(L, LGAME_VIDEOINFO_METATABLE);
+  lua_setmetatable(L, -2);
+
+  memset(vinfo, 0, sizeof(lgame_VideoInfo));
+
+  return vinfo;
+}
+
+lgame_VideoInfo* lgame_checkvideoinfo(lua_State* L, int idx) {
+  return luaL_checkudata(L, idx, LGAME_VIDEOINFO_METATABLE);
+}
 
 SDL_Surface* lgame_get_windowsurface(void) { return lgame_WindowSurface; }
 SDL_Window* lgame_get_window(void) { return lgame_Window; }
@@ -354,5 +379,135 @@ static int display_update(lua_State* L) {
 
 static int display_get_driver(lua_State* L) {
   lua_pushstring(L, SDL_GetCurrentVideoDriver());
+  return 1;
+}
+
+static int VideoInfo_new(lua_State* L) {
+  lgame_VideoInfo* self = lgame_pushvideoinfo(L);
+
+  const SDL_PixelFormatDetails* pfd;
+
+  if (lgame_display_mode_set) {
+    pfd = SDL_GetPixelFormatDetails(lgame_WindowSurface->format);
+
+    self->current_w = lgame_WindowSurface->w;
+    self->current_h = lgame_WindowSurface->h;
+  }
+  else {
+    const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(1);
+    if (dm == NULL)
+      return luaL_error(L, SDL_GetError());
+
+    pfd = SDL_GetPixelFormatDetails(dm->format);
+
+    self->current_w = dm->w;
+    self->current_h = dm->h;
+  }
+
+  if (pfd == NULL)
+    return luaL_error(L, SDL_GetError());
+
+  self->bitsize = pfd->bits_per_pixel;
+  self->bytesize = pfd->bytes_per_pixel;
+
+  self->Rmask = pfd->Rmask;
+  self->Gmask = pfd->Gmask;
+  self->Bmask = pfd->Bmask;
+  self->Amask = pfd->Amask;
+
+  self->Rshift = pfd->Rshift;
+  self->Gshift = pfd->Gshift;
+  self->Bshift = pfd->Bshift;
+  self->Ashift = pfd->Ashift;
+
+  self->Rloss = 8 - pfd->Rbits;
+  self->Gloss = 8 - pfd->Gbits;
+  self->Bloss = 8 - pfd->Bbits;
+  self->Aloss = 8 - pfd->Abits;
+
+  self->pixel_format = pfd->format;
+
+  return 1;
+}
+
+#define PUSH4INT(L, a, b, c, d) \
+  do { \
+    lua_createtable(L, 4, 0); \
+    lua_pushinteger(L, (a)); \
+    lua_rawseti(L, -2, 1); \
+    lua_pushinteger(L, (b)); \
+    lua_rawseti(L, -2, 2); \
+    lua_pushinteger(L, (c)); \
+    lua_rawseti(L, -2, 3); \
+    lua_pushinteger(L, (d)); \
+    lua_rawseti(L, -2, 4); \
+  } while (0)
+
+static int VideoInfo__index(lua_State* L) {
+  lgame_VideoInfo* self = lgame_checkvideoinfo(L, 1);
+  const char* key = luaL_checkstring(L, 2);
+  if (strcmp(key, "hw") == 0)
+    lua_pushinteger(L, self->hw);
+  else if (strcmp(key, "wm") == 0)
+    lua_pushinteger(L, self->wm);
+  else if (strcmp(key, "video_mem") == 0)
+    lua_pushinteger(L, self->video_mem);
+  else if (strcmp(key, "bitsize") == 0)
+    lua_pushinteger(L, self->bitsize);
+  else if (strcmp(key, "bytesize") == 0)
+    lua_pushinteger(L, self->bytesize);
+  else if (strcmp(key, "masks") == 0)
+    PUSH4INT(L, self->Rmask, self->Gmask, self->Bmask, self->Amask);
+  else if (strcmp(key, "shifts") == 0)
+    PUSH4INT(L, self->Rshift, self->Gshift, self->Bshift, self->Ashift);
+  else if (strcmp(key, "losses") == 0)
+    PUSH4INT(L, self->Rloss, self->Gloss, self->Bloss, self->Aloss);
+  else if (strcmp(key, "blit_hw") == 0)
+    lua_pushinteger(L, self->blit_hw);
+  else if (strcmp(key, "blit_hw_CC") == 0)
+    lua_pushinteger(L, self->blit_hw_CC);
+  else if (strcmp(key, "blit_hw_A") == 0)
+    lua_pushinteger(L, self->blit_hw_A);
+  else if (strcmp(key, "blit_sw") == 0)
+    lua_pushinteger(L, self->blit_sw);
+  else if (strcmp(key, "blit_sw_CC") == 0)
+    lua_pushinteger(L, self->blit_sw_CC);
+  else if (strcmp(key, "blit_sw_A") == 0)
+    lua_pushinteger(L, self->blit_sw_A);
+  else if (strcmp(key, "current_w") == 0)
+    lua_pushinteger(L, self->current_w);
+  else if (strcmp(key, "current_h") == 0)
+    lua_pushinteger(L, self->current_h);
+  else if (strcmp(key, "pixel_format") == 0)
+    lua_pushstring(L, SDL_GetPixelFormatName(self->pixel_format));
+  else
+    return luaL_error(L, "invalid '%s' key", key);
+
+  return 1;
+}
+
+static int VideoInfo__tostring(lua_State* L) {
+  lgame_VideoInfo* self = lgame_checkvideoinfo(L, 1);
+  char buffer[512];
+  snprintf(buffer, 512, 
+    "<VideoInfo(hw = %d, wm = %d, video_mem = %d,\n"                    
+    "           blit_hw = %d, blit_hw_CC = %d, blit_hw_A = %d,\n"
+    "           blit_sw = %d, blit_sw_CC = %d, blit_sw_A = %d,\n"
+    "           bitsize = %d, bytesize = %d,\n"
+    "           masks = (0x%08X, 0x%08X, 0x%08X, 0x%08X),\n"
+    "           shifts = (%d, %d, %d, %d),\n"
+    "           losses = (%d, %d, %d, %d),\n"
+    "           current_w = %d, current_h = %d,\n"
+    "           pixel_format = %s)>\n",
+    self->hw, self->wm, self->video_mem,
+    self->blit_hw, self->blit_hw_CC, self->blit_hw_A,
+    self->blit_sw, self->blit_sw_CC, self->blit_sw_A,
+    self->bitsize, self->bytesize,
+    self->Rmask, self->Gmask, self->Bmask, self->Amask,
+    self->Rshift, self->Gshift, self->Bshift, self->Ashift,
+    self->Rloss, self->Gloss, self->Bloss, self->Aloss,
+    self->current_w, self->current_h,
+    SDL_GetPixelFormatName(self->pixel_format));
+  lua_pushstring(L, buffer);
   return 1;
 }
