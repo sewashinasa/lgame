@@ -19,6 +19,16 @@ static int display_get_surface(lua_State* L);
 static int display_flip(lua_State* L);
 static int display_update(lua_State* L);
 static int display_get_driver(lua_State* L);
+static int display_get_wm_info(lua_State* L);
+static int display_get_desktop_sizes(lua_State* L);
+static int display_list_modes(lua_State* L);
+static int display_get_active(lua_State* L);
+static int display_iconify(lua_State* L);
+static int display_toggle_fullscreen(lua_State* L);
+static int display_set_icon(lua_State* L);
+static int display_set_caption(lua_State* L);
+static int display_get_caption(lua_State* L);
+static int display_is_fullscreen(lua_State* L);
 
 static int VideoInfo_new(lua_State* L);
 static int VideoInfo__index(lua_State* L);
@@ -34,6 +44,16 @@ const struct luaL_Reg lgame_display_module[] = {
   {"update", display_update},
   {"get_driver", display_get_driver},
   {"VideoInfo", VideoInfo_new},
+  {"get_wm_info", display_get_wm_info},
+  {"get_desktop_sizes", display_get_desktop_sizes},
+  {"list_modes", display_list_modes},
+  {"get_active", display_get_active},
+  {"iconify", display_iconify},
+  {"toggle_fullscreen", display_toggle_fullscreen},
+  {"set_icon", display_set_icon},
+  {"set_caption", display_set_caption},
+  {"get_caption", display_get_caption},
+  {"is_fullscreen", display_is_fullscreen},
   {NULL, NULL}
 };
 
@@ -50,6 +70,9 @@ static int lgame_display_initialized = 0;
 static int lgame_display_mode_set = 0;
 
 int lgame_validate_window_surface = 0;
+
+static int last_window_width = 0;
+static int last_window_height = 0;
 
 lgame_VideoInfo *lgame_pushvideoinfo(lua_State* L) {
   lgame_VideoInfo* vinfo = (lgame_VideoInfo*)lua_newuserdata(L, sizeof(lgame_VideoInfo));
@@ -509,5 +532,256 @@ static int VideoInfo__tostring(lua_State* L) {
     self->current_w, self->current_h,
     SDL_GetPixelFormatName(self->pixel_format));
   lua_pushstring(L, buffer);
+  return 1;
+}
+
+static int display_get_wm_info(lua_State* L) {
+  return 0;
+}
+
+static int display_get_desktop_sizes(lua_State* L) {
+  int num_displays;
+  SDL_DisplayID* displays = SDL_GetDisplays(&num_displays);
+  if (displays == NULL) {
+    return luaL_error(L, SDL_GetError());
+  }
+  SDL_DisplayID* display = displays;
+  int i = 1;
+  lua_createtable(L, num_displays, 0);
+  while (*display != 0) {
+    const SDL_DisplayMode* dm = SDL_GetDesktopDisplayMode(*display);
+    if (dm == NULL) {
+      SDL_free(displays);
+      return luaL_error(L, SDL_GetError());
+    }
+    lua_createtable(L, 2, 0);
+    lua_pushinteger(L, dm->w);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, dm->h);
+    lua_rawseti(L, -2, 2);
+    lua_rawseti(L, -2, i);
+    display++;
+    i++;
+  }
+
+  SDL_free(displays);
+  return 1;
+}
+
+static int display_list_modes(lua_State* L) {
+  int depth = (int)luaL_optinteger(L, 1, 0);
+  int flags = (int)luaL_optinteger(L, 2, LGAME_FULLSCREEN); (void)flags;
+  int display = (int)luaL_optinteger(L, 3, 0);
+
+  int num_displays;
+  SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);
+  if (displays == NULL)
+    return luaL_error(L, SDL_GetError());
+
+  if (display < 0 || display >= num_displays) {
+    SDL_free(displays);
+    const char* message = lua_pushfstring(L, "the display should be between 0 and %d", num_displays-1);
+    return luaL_argerror(L, 3, message);
+  }
+
+  SDL_DisplayID display_id = displays[display];
+  SDL_free(displays);
+
+  if (depth == 0) {
+    const SDL_DisplayMode *dm = SDL_GetCurrentDisplayMode(display_id);
+    if (dm == NULL)
+      return luaL_error(L, SDL_GetError());
+
+    depth = SDL_BITSPERPIXEL(dm->format);
+  }
+
+  int num_modes;
+  SDL_DisplayMode** modes = SDL_GetFullscreenDisplayModes(display_id, &num_modes);
+  if (modes == NULL)
+    return luaL_error(L, SDL_GetError());
+
+  int i = 1;
+  int last_width = -1;
+  int last_height = -1;
+  SDL_DisplayMode** mode = modes;
+  lua_createtable(L, num_modes, 0);
+  while (*mode != NULL) {
+    if (SDL_BITSPERPIXEL((*mode)->format) != depth) {
+      mode++;
+      continue;
+    }
+
+    if (last_width == (*mode)->w && last_height == (*mode)->h) {
+      mode++;
+      continue;
+    }
+
+    lua_createtable(L, 2, 0);
+    lua_pushinteger(L, (*mode)->w);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, (*mode)->h);
+    lua_rawseti(L, -2, 2);
+    lua_rawseti(L, -2, i);
+
+    last_width = (*mode)->w;
+    last_height = (*mode)->h;
+
+    mode++;
+    i++;
+  }
+
+  SDL_free(modes);
+  return 1;
+}
+
+static int display_get_active(lua_State* L) {
+  if (lgame_Window == NULL) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+
+  SDL_WindowFlags flags = SDL_GetWindowFlags(lgame_Window);
+  lua_pushboolean(L,
+    !(flags & SDL_WINDOW_HIDDEN) &&
+    !(flags & SDL_WINDOW_MINIMIZED));
+  return 1;
+}
+
+static int display_iconify(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  bool ok = SDL_MinimizeWindow(lgame_Window);
+  lua_pushboolean(L, ok);
+  return 1;
+}
+
+static int display_toggle_fullscreen(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  SDL_WindowFlags flags = SDL_GetWindowFlags(lgame_Window);
+  if (flags & SDL_WINDOW_FULLSCREEN) {
+    if (!SDL_SetWindowFullscreen(lgame_Window, false)) {
+      return luaL_error(L, SDL_GetError());
+    }
+
+    int current_w;
+    int current_h;
+    if (!SDL_GetWindowSize(lgame_Window, &current_w, &current_h))
+      return luaL_error(L, SDL_GetError());
+
+    if (last_window_width != current_w || last_window_height != current_h)
+      if (!SDL_SetWindowSize(lgame_Window, last_window_width, last_window_height))
+        return luaL_error(L, SDL_GetError());
+  }
+  else {
+    SDL_DisplayID display = SDL_GetDisplayForWindow(lgame_Window);
+    if (display == 0)
+      return luaL_error(L, SDL_GetError());
+
+    int num_modes;
+    SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(display, &num_modes);
+    if (modes == NULL)
+      return luaL_error(L, SDL_GetError());
+
+    int current_w = lgame_WindowSurface->w;
+    int current_h = lgame_WindowSurface->h;
+
+    last_window_width = current_w;
+    last_window_height = current_h;
+
+    SDL_DisplayMode* smallest_mode = modes[num_modes-1];
+    int smallest_w = smallest_mode->w;
+    int smallest_h = smallest_mode->h;
+    if (current_w < smallest_w)
+      current_w = smallest_w;
+    if (current_h < smallest_h)
+      current_h = smallest_h;
+
+    SDL_DisplayMode fullscreen_mode;
+    SDL_zero(fullscreen_mode);
+
+    int mode_find = 0;
+    SDL_DisplayMode** mode = modes;
+    while (*mode != NULL) {
+      if (current_w == (*mode)->w && current_h == (*mode)->h) {
+        mode_find = 1;
+        memcpy(&fullscreen_mode, *mode, sizeof(fullscreen_mode));
+        break;
+      }
+      mode++;
+    }
+
+    SDL_free(modes);
+    
+    if (!mode_find)
+      if (!SDL_GetClosestFullscreenDisplayMode(display, current_w, current_h, .0f, false, &fullscreen_mode))
+        return luaL_error(L, SDL_GetError());
+
+    if (!SDL_SetWindowFullscreenMode(lgame_Window, &fullscreen_mode))
+      return luaL_error(L, SDL_GetError());
+
+    if (!SDL_SetWindowFullscreen(lgame_Window, true)) {
+      return luaL_error(L, SDL_GetError());
+    }
+  }
+
+  lgame_WindowSurface = SDL_GetWindowSurface(lgame_Window);
+  if (!lgame_WindowSurface)
+    return luaL_error(L, SDL_GetError());
+
+  lgame_Surface* ws;
+  lgame_getwindowsurface(L);
+  ws = (lgame_Surface*)lua_touserdata(L, -1);
+  ws->surf = lgame_WindowSurface;
+  lua_pop(L, 1);
+
+  lua_pushinteger(L, 1);
+  return 1;
+}
+
+static int display_set_icon(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  SDL_Surface* icon = lgame_checksurface(L, 1)->surf;
+  if (!SDL_SetWindowIcon(lgame_Window, icon))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int display_set_caption(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  const char* title = luaL_checkstring(L, 1);
+  if (!SDL_SetWindowTitle(lgame_Window, title))
+    return luaL_error(L, SDL_GetError());
+  return 0;
+}
+
+static int display_get_caption(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  lua_pushstring(L, SDL_GetWindowTitle(lgame_Window));
+  return 1;
+}
+
+static int display_is_fullscreen(lua_State* L) {
+  if (lgame_Window == NULL) {
+    return luaL_error(L, "no open window");
+  }
+
+  SDL_WindowFlags flags = SDL_GetWindowFlags(lgame_Window);
+  int fullscreen = flags & SDL_WINDOW_FULLSCREEN;
+  lua_pushboolean(L, fullscreen);
+
   return 1;
 }
