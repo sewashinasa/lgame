@@ -44,6 +44,8 @@ static void SET_PIXEL_3BPP(Uint8* pixels, int x, int y, int pitch, Uint32 pixel)
 }
 
 SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
+  int dst_needs_free = dst == NULL;
+
   int src_w = src->w;
   int src_h = src->h;
   int src_pitch = src->pitch;
@@ -77,10 +79,12 @@ SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
     }
@@ -143,6 +147,8 @@ SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
 }
 
 SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
+  int dst_needs_free = dst == NULL;
+
   int src_w = src->w;
   int src_h = src->h;
   int src_pitch = src->pitch;
@@ -176,10 +182,12 @@ SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
     }
@@ -242,6 +250,8 @@ SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
 }
 
 SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
+  int dst_needs_free = dst == NULL;
+
   int src_w = src->w;
   int src_h = src->h;
   int src_pitch = src->pitch;
@@ -275,10 +285,12 @@ SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
     }
@@ -341,6 +353,8 @@ SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
 }
 
 SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
+  int dst_needs_free = dst == NULL;
+
   int src_w = src->w;
   int src_h = src->h;
   int src_pitch = src->pitch;
@@ -374,10 +388,12 @@ SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
     }

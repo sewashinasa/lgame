@@ -243,10 +243,20 @@ static int transform_scale2x(lua_State* L) {
   default:
     return luaL_error(L, "unsupport pixel format");
   }
-  lgame_Surface* res = lgame_pushsurface(L);
-  res->surf = scale2x_function(src->surf, dst ? dst->surf : NULL);
-  if (res->surf == NULL)
+
+  SDL_Surface *dst_surface = scale2x_function(src->surf, dst ? dst->surf : NULL);
+  if (dst_surface == NULL)
     return luaL_error(L, SDL_GetError());
+
+  if (dst) {
+    lua_pushvalue(L, 2);
+  } 
+  else {
+    lgame_Surface* res = lgame_pushsurface(L);
+    res->surf = dst_surface;
+    if (res->surf == NULL)
+      return luaL_error(L, SDL_GetError());
+  }
 
   return 1;
 }
