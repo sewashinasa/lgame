@@ -15,11 +15,13 @@ static int lgame_initialized = 0;
 static int base_init(lua_State* L);
 static int base_quit(lua_State* L);
 static int base_get_init(lua_State* L);
+static int base_type(lua_State* L);
 
 const struct luaL_Reg lgame_base_module[] = {
   {"init", base_init},
   {"quit", base_quit},
   {"get_init", base_get_init},
+  {"type", base_type},
   {NULL, NULL}
 };
 
@@ -99,5 +101,47 @@ static int base_quit(lua_State* L) {
 
 static int base_get_init(lua_State* L) {
   lua_pushboolean(L, lgame_initialized);
+  return 1;
+}
+
+#define MAKETYPE(name) "lgame."##name
+#define RECTTYPE    MAKETYPE("Rect")
+#define COLORTYPE   MAKETYPE("Color")
+#define SURFACETYPE MAKETYPE("Surface")
+#define EVENTTYPE   MAKETYPE("Event")
+#define CLOCKTYPE   MAKETYPE("Clock")
+#define VIDINFOTYPE MAKETYPE("VideoInfo")
+#define SOUNDTYPE   MAKETYPE("Sound")
+#define CHANNELTYPE MAKETYPE("Channel")
+#define FONTTYPE    MAKETYPE("Font")
+
+static int base_type(lua_State* L) {
+  luaL_checkany(L, 1);
+  const char* type = luaL_typename(L, 1);
+  if (strcmp(type, "userdata") == 0) {
+    if (luaL_testudata(L, 1, RECTTYPE) != NULL)
+      lua_pushstring(L, RECTTYPE);
+    else if (luaL_testudata(L, 1, COLORTYPE) != NULL)
+      lua_pushstring(L, COLORTYPE);
+    else if (luaL_testudata(L, 1, SURFACETYPE) != NULL)
+      lua_pushstring(L, SURFACETYPE);
+    else if (luaL_testudata(L, 1, EVENTTYPE) != NULL)
+      lua_pushstring(L, EVENTTYPE);
+    else if (luaL_testudata(L, 1, CLOCKTYPE) != NULL)
+      lua_pushstring(L, CLOCKTYPE);
+    else if (luaL_testudata(L, 1, VIDINFOTYPE) != NULL)
+      lua_pushstring(L, VIDINFOTYPE);
+    else if (luaL_testudata(L, 1, SOUNDTYPE) != NULL)
+      lua_pushstring(L, SOUNDTYPE);
+    else if (luaL_testudata(L, 1, CHANNELTYPE) != NULL)
+      lua_pushstring(L, CHANNELTYPE);
+    else if (luaL_testudata(L, 1, FONTTYPE) != NULL)
+      lua_pushstring(L, FONTTYPE);
+    else
+      lua_pushstring(L, "userdata");
+  }
+  else {
+    lua_pushstring(L, type);
+  }
   return 1;
 }

@@ -105,6 +105,7 @@ __declspec(dllexport) int luaopen_lgame(lua_State* L) {
   pushfunction(L, "init", getfunction(L, "init", lgame_base_module));
   pushfunction(L, "quit", getfunction(L, "quit", lgame_base_module));
   pushfunction(L, "get_init", getfunction(L, "get_init", lgame_base_module));
+  pushfunction(L, "type", getfunction(L, "type", lgame_base_module));
 
   pushfunction(L, "Rect", getfunction(L, "Rect", lgame_rect_module));
   pushfunction(L, "Color", getfunction(L, "Color", lgame_color_module));
