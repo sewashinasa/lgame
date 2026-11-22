@@ -7,22 +7,22 @@
 #include "lsurface.h"
 
 #define GET_PIXEL_4BPP(pixels, x, y, pitch) \
-  *(Uint32*)(pixels + ((y) * (pitch)) + ((x) * 4));
+  *(Uint32*)(pixels + ((y) * (pitch)) + ((x) * 4))
 
 #define SET_PIXEL_4BPP(pixels, x, y, pitch, pixel) \
-  *(Uint32*)(pixels + ((y) * (pitch)) + ((x) * 4)) = pixel;
+  *(Uint32*)(pixels + ((y) * (pitch)) + ((x) * 4)) = pixel
 
 #define GET_PIXEL_2BPP(pixels, x, y, pitch) \
-  *(Uint16*)(pixels + ((y) * (pitch)) + ((x) * 2));
+  *(Uint16*)(pixels + ((y) * (pitch)) + ((x) * 2))
 
 #define SET_PIXEL_2BPP(pixels, x, y, pitch, pixel) \
-  *(Uint16*)(pixels + ((y) * (pitch)) + ((x) * 2)) = pixel;
+  *(Uint16*)(pixels + ((y) * (pitch)) + ((x) * 2)) = pixel
 
 #define GET_PIXEL_1BPP(pixels, x, y, pitch) \
-  *(pixels + ((y) * (pitch)) + ((x) * 1));
+  *(pixels + ((y) * (pitch)) + ((x) * 1))
 
 #define SET_PIXEL_1BPP(pixels, x, y, pitch, pixel) \
-  *(pixels + ((y) * (pitch)) + ((x) * 1)) = pixel;
+  *(pixels + ((y) * (pitch)) + ((x) * 1)) = pixel
 
 static Uint32 GET_PIXEL_3BPP(Uint8* pixels, int x, int y, int pitch) {
   Uint8* p = pixels + (y * pitch) + (x * 3);
@@ -45,6 +45,19 @@ static void SET_PIXEL_3BPP(Uint8* pixels, int x, int y, int pitch, Uint32 pixel)
 
 SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
   int dst_needs_free = dst == NULL;
+
+  if (SDL_MUSTLOCK(src)) {
+    if (!SDL_LockSurface(src)) {
+      return NULL;
+    }
+  }
+
+  if (dst && SDL_MUSTLOCK(dst)) {
+    if (!SDL_LockSurface(dst)) {
+      SDL_UnlockSurface(src);
+      return NULL;
+    }
+  }
 
   int src_w = src->w;
   int src_h = src->h;
@@ -71,6 +84,14 @@ SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
     if (dst == NULL)
       return NULL;
 
+    if (SDL_MUSTLOCK(dst)) {
+      if (!SDL_LockSurface(dst)) {
+        SDL_DestroySurface(dst);
+        SDL_UnlockSurface(src);
+        return NULL;
+      }
+    }
+
     dst_w = dst->w;
     dst_h = dst->h;
     dst_pitch = dst->pitch;
@@ -79,11 +100,15 @@ SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
@@ -143,11 +168,27 @@ SDL_Surface* lgame_scale2x_4bpp(SDL_Surface *src, SDL_Surface* dst) {
     }
   }
 
+  if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+  if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
+
   return dst;
 }
 
 SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
   int dst_needs_free = dst == NULL;
+
+  if (SDL_MUSTLOCK(src)) {
+    if (!SDL_LockSurface(src)) {
+      return NULL;
+    }
+  }
+
+  if (dst && SDL_MUSTLOCK(dst)) {
+    if (!SDL_LockSurface(dst)) {
+      SDL_UnlockSurface(src);
+      return NULL;
+    }
+  }
 
   int src_w = src->w;
   int src_h = src->h;
@@ -174,6 +215,14 @@ SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
     if (dst == NULL)
       return NULL;
 
+    if (SDL_MUSTLOCK(dst)) {
+      if (!SDL_LockSurface(dst)) {
+        SDL_DestroySurface(dst);
+        SDL_UnlockSurface(src);
+        return NULL;
+      }
+    }
+
     dst_w = dst->w;
     dst_h = dst->h;
     dst_pitch = dst->pitch;
@@ -182,11 +231,15 @@ SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
@@ -246,11 +299,27 @@ SDL_Surface* lgame_scale2x_3bpp(SDL_Surface* src, SDL_Surface* dst) {
     }
   }
 
+  if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+  if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
+
   return dst;
 }
 
 SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
   int dst_needs_free = dst == NULL;
+
+  if (SDL_MUSTLOCK(src)) {
+    if (!SDL_LockSurface(src)) {
+      return NULL;
+    }
+  }
+
+  if (dst && SDL_MUSTLOCK(dst)) {
+    if (!SDL_LockSurface(dst)) {
+      SDL_UnlockSurface(src);
+      return NULL;
+    }
+  }
 
   int src_w = src->w;
   int src_h = src->h;
@@ -277,6 +346,14 @@ SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
     if (dst == NULL)
       return NULL;
 
+    if (SDL_MUSTLOCK(dst)) {
+      if (!SDL_LockSurface(dst)) {
+        SDL_DestroySurface(dst);
+        SDL_UnlockSurface(src);
+        return NULL;
+      }
+    }
+
     dst_w = dst->w;
     dst_h = dst->h;
     dst_pitch = dst->pitch;
@@ -285,11 +362,15 @@ SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
@@ -349,11 +430,27 @@ SDL_Surface* lgame_scale2x_2bpp(SDL_Surface* src, SDL_Surface* dst) {
     }
   }
 
+  if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+  if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
+
   return dst;
 }
 
 SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
   int dst_needs_free = dst == NULL;
+
+  if (SDL_MUSTLOCK(src)) {
+    if (!SDL_LockSurface(src)) {
+      return NULL;
+    }
+  }
+
+  if (dst && SDL_MUSTLOCK(dst)) {
+    if (!SDL_LockSurface(dst)) {
+      SDL_UnlockSurface(src);
+      return NULL;
+    }
+  }
 
   int src_w = src->w;
   int src_h = src->h;
@@ -380,6 +477,14 @@ SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
     if (dst == NULL)
       return NULL;
 
+    if (SDL_MUSTLOCK(dst)) {
+      if (!SDL_LockSurface(dst)) {
+        SDL_DestroySurface(dst);
+        SDL_UnlockSurface(src);
+        return NULL;
+      }
+    }
+
     dst_w = dst->w;
     dst_h = dst->h;
     dst_pitch = dst->pitch;
@@ -388,11 +493,15 @@ SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
   }
   else {
     if (dst_w != (src_w * 2) || dst_h != (src_h * 2)) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the size of the source and destination surfaces should match");
       return NULL;
     }
     else if (dst_format != src_format) {
+      if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+      if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
       if (dst_needs_free) SDL_DestroySurface(dst);
       SDL_SetError("the pixel format of the source and destination surfaces should match");
       return NULL;
@@ -451,6 +560,9 @@ SDL_Surface* lgame_scale2x_1bpp(SDL_Surface* src, SDL_Surface* dst) {
       SET_PIXEL_1BPP(dst_pixels, dst_x + 1, dst_y + 1, dst_pitch, E3);
     }
   }
+
+  if (SDL_MUSTLOCK(src)) SDL_UnlockSurface(src);
+  if (SDL_MUSTLOCK(dst)) SDL_UnlockSurface(dst);
 
   return dst;
 }
