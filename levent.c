@@ -4,6 +4,7 @@
 #include <lua/lauxlib.h>
 
 #include "levent.h"
+#include "ldisplay.h"
 #include "lconsts.h"
 
 #define BUFEVENTSZ 128
@@ -18,6 +19,12 @@ static int event_get(lua_State* L);
 static int event_poll(lua_State* L);
 static int event_wait(lua_State* L);
 static int event_peek(lua_State* L);
+static int event_clear(lua_State* L);
+static int event_set_blocked(lua_State* L);
+static int event_set_allowed(lua_State* L);
+static int event_get_blocked(lua_State* L);
+static int event_set_grab(lua_State* L);
+static int event_get_grab(lua_State* L);
 static int event_event_name(lua_State* L);
 static int event_post(lua_State* L);
 
@@ -28,6 +35,12 @@ const struct luaL_Reg lgame_event_module[] = {
   {"poll", event_poll},
   {"wait", event_wait},
   {"peek", event_peek},
+  {"clear", event_clear},
+  {"set_blocked", event_set_blocked},
+  {"set_allowed", event_set_allowed},
+  {"get_blocked", event_get_blocked},
+  {"set_grab", event_set_grab},
+  {"get_grab", event_get_grab},
   {"event_name", event_event_name},
   {"post", event_post},
   {NULL, NULL}
@@ -531,6 +544,22 @@ static int event_peek(lua_State* L) {
   return 1;
 }
 
+static int event_clear(lua_State* L) {
+  checkpump(L, 2);
+  if (lua_istable(L, 1)) {
+    int len = (int)lua_rawlen(L, 1);
+    for (int i = 0; i < len; i++) {
+      lua_rawgeti(L, 1, (lua_Integer)(i + 1));
+      SDL_FlushEvent((Uint32)luaL_checkinteger(L, -1));
+      lua_pop(L, 1);
+    }
+  }
+  else {
+    SDL_FlushEvents(SDL_EVENT_FIRST, SDL_EVENT_LAST);
+  }
+  return 0;
+}
+
 static const char* get_event_name(Uint32 type) {
   switch (type) {
   case (LGAME_QUIT):
@@ -562,6 +591,92 @@ static const char* get_event_name(Uint32 type) {
 
 static int event_event_name(lua_State* L) {
   lua_pushstring(L, get_event_name((Uint32)luaL_checkinteger(L, 1)));
+  return 1;
+}
+
+static int set_events_state(lua_State* L, bool state) {
+  if (lua_isinteger(L, 1))
+    SDL_SetEventEnabled((Uint32)luaL_checkinteger(L, 1), state);
+  else if (lua_istable(L, 1)) {
+    int len = (int)lua_rawlen(L, 1);
+    for (int i = 0; i < len; i++) {
+      lua_rawgeti(L, 1, (lua_Integer)(i + 1));
+      SDL_SetEventEnabled((Uint32)luaL_checkinteger(L, -1), state);
+      lua_pop(L, 1);
+    }
+  }
+  else if (lua_isnoneornil(L, 1)) {
+    for (Uint32 event = SDL_EVENT_FIRST; event < SDL_EVENT_LAST; event++) {
+      SDL_SetEventEnabled(event, state);
+    }
+  }
+  else {
+    return luaL_typeerror(L, 1, "integer or table or nil");
+  }
+  return 0;
+}
+
+static int event_set_blocked(lua_State* L) {
+  return set_events_state(L, false);
+}
+
+static int event_set_allowed(lua_State* L) {
+  return set_events_state(L, true);
+}
+
+static int event_get_blocked(lua_State* L) {
+  if (lua_isinteger(L, 1))
+    lua_pushboolean(L, SDL_EventEnabled((Uint32)luaL_checkinteger(L, 1)) == false);
+  else if (lua_istable(L, 1)) {
+    int len = (int)lua_rawlen(L, 1);
+    for (int i = 0; i < len; i++) {
+      lua_rawgeti(L, 1, (lua_Integer)(i + 1));
+      Uint32 event = (Uint32)luaL_checkinteger(L, -1);
+      if (SDL_EventEnabled(event) == false) {
+        lua_pop(L, 1);
+        lua_pushboolean(L, 1);
+        break;
+      }
+      lua_pop(L, 1);
+    }
+    lua_pushboolean(L, 0);
+  }
+  else {
+    return luaL_typeerror(L, 1, "integer or table");
+  }
+  return 1;
+}
+
+static int event_set_grab(lua_State* L) {
+  SDL_Window* window = lgame_get_window();
+  if (window == NULL)
+    return 0;
+
+  int enabled = lua_toboolean(L, 1);
+  if (!SDL_SetWindowMouseGrab(window, enabled))
+    return luaL_error(L, SDL_GetError());
+
+  if (enabled) {
+    if (SDL_CursorVisible())
+      SDL_SetWindowRelativeMouseMode(window, false);
+    else
+      SDL_SetWindowRelativeMouseMode(window, true);
+  }
+  else {
+    SDL_SetWindowRelativeMouseMode(window, false);
+  }
+
+  return 0;
+}
+
+static int event_get_grab(lua_State* L) {
+  SDL_Window* window = lgame_get_window();
+  if (window == NULL) {
+    lua_pushboolean(L, 0);
+    return 1;
+  }
+
+  lua_pushboolean(L, SDL_GetWindowMouseGrab(window));
   return 1;
 }
 
