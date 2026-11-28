@@ -42,6 +42,14 @@ static int Font_get_bold(lua_State * L);
 static int Font_set_italic(lua_State * L);
 static int Font_get_italic(lua_State * L);
 static int Font_metrics(lua_State * L);
+static int Font_get_linesize(lua_State * L);
+static int Font_set_linesize(lua_State * L);
+static int Font_get_height(lua_State * L);
+static int Font_set_point_size(lua_State * L);
+static int Font_get_point_size(lua_State * L);
+static int Font_get_ascent(lua_State * L);
+static int Font_get_descent(lua_State * L);
+static int Font_set_direction(lua_State * L);
 static int Font__index(lua_State * L);
 static int Font__newindex(lua_State * L);
 static int Font__gc(lua_State * L);
@@ -67,6 +75,14 @@ const struct luaL_Reg lgame_Font_methods[] = {
   {"set_italic", Font_set_italic},
   {"get_italic", Font_get_italic},
   {"metrics", Font_metrics},
+  {"get_linesize", Font_get_linesize},
+  {"set_linesize", Font_set_linesize},
+  {"get_height", Font_get_height},
+  {"set_point_size", Font_set_point_size},
+  {"get_point_size", Font_get_point_size},
+  {"get_ascent", Font_get_ascent},
+  {"get_descent", Font_get_descent},
+  {"set_direction", Font_set_direction},
   {NULL, NULL}
 };
 
